@@ -7,7 +7,7 @@ User ── Profile (1:1)
   │
   ├── Like (N:M) ── Post
   │
-  └── Friendship (N:M) ── User
+  └── Friendship (N:M) ── User ```
 ***
 
 **Relationship types:**
@@ -17,11 +17,13 @@ User ── Profile (1:1)
 	One record in entity A can be linked to many records in entity B.
 - **N : M (Many-to-Many)**
     Multiple records in entity A can be linked to multiple records in entity B, usually through a linking table.
-
-**ModerationLog** (entity)
+```text
+ModerationLog (entity)
  ├── Post
  └── Comment
+```
 *  *( "for Minor: Content moderation AI (auto moderation, auto deletion, auto warning, etc.")*
+
 
 #### **🔹 User (entity) — core entity**
 
