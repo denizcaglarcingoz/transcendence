@@ -1,0 +1,121 @@
+openapi: 3.0.3
+
+info:
+  title: Transcendence API
+  description: API contract for Transcendence platform (Auth / Users / Posts / Moderation)
+  version: 1.0.0
+
+servers:
+  # - url: https://api.transcendence.com
+  #   description: Production
+  - url: http://localhost:5000
+    description: Local development
+
+paths:
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: User login
+      description: Authenticates user and returns JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: secret1234
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - expiresInSeconds
+        - user
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        refreshToken:
+          type: string
+          example: 8f7d9a2e-xxxx-xxxx-xxxx-1234567890ab
+        expiresInSeconds:
+          type: integer
+          example: 3600
+        user:
+          $ref: '#/components/schemas/UserPublicDto'
+
+    UserPublicDto:
+      type: object
+      required:
+        - id
+        - displayName
+        - createdAt
+      properties:
+        id:
+          type: string
+          example: user_123
+        displayName:
+          type: string
+          example: Valerii Bezhevets
+        avatarUrl:
+          type: string
+          nullable: true
+          example: https://cdn.transcendence.com/avatars/user_123.png
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-12-29T12:00:00Z
+
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: AUTH_INVALID_CREDENTIALS
+        message:
+          type: string
+          example: Invalid email or password
+        traceId:
+          type: string
+          nullable: true
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
