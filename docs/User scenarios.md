@@ -1,3 +1,53 @@
+```
+User
+├── Auth
+│   ├── Register
+│   ├── Login
+│   ├── Logout
+│   ├── Refresh session
+│   └── Reset password
+│
+├── Profile
+│   ├── View profile
+│   ├── Edit profile
+│   ├── Follow user
+│   └── Unfollow user
+│
+├── Feed
+│   ├── View feed
+│   ├── Load next page
+│   ├── Refresh feed
+│   └── View single post
+│
+├── Post
+│   ├── Create post
+│   ├── Edit post
+│   ├── Delete post
+│   └── Attach media
+│
+├── Interaction
+│   ├── Like post
+│   ├── Unlike post
+│   ├── Comment post
+│   ├── Edit comment
+│   └── Delete comment
+│
+├── Moderation
+│   ├── Auto-check content (AI)
+│   ├── Report content
+│   ├── Review moderation result
+│   └── Content blocked / approved
+│
+├── Notifications
+│   ├── New like
+│   ├── New comment
+│   ├── New follower
+│   └── Moderation status
+│
+└── Settings
+    ├── Change language
+    ├── Privacy settings
+    └── Account delete
  
 
 ## **1️⃣ Registration & Login**
