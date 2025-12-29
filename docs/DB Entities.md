@@ -1,13 +1,24 @@
 **User** (entity)
 ```text
-User ── Profile (1:1)
-  │
-  ├── Post (1:N)
-  │     └── Comment (1:N)
-  │
-  ├── Like (N:M) ── Post
-  │
-  └── Friendship (N:M) ── User
+User
+├── Profile (1:1)
+├── UserSettings (1:1)
+├── RefreshToken (1:N)
+│
+├── Post (1:N)
+│   ├── Media (1:N)
+│   ├── Like (N:M) ── User
+│   ├── Comment (1:N)
+│   │   └── ModerationLog (1:N)
+│   └── ModerationLog (1:N)
+│
+├── Follow (N:M) ── User
+│
+├── Notification (1:N)
+│
+└── Report (1:N)
+      ├── Post (N:1)
+      └── Comment (N:1) 
 ```
 
 **Relationship types:**
@@ -23,6 +34,7 @@ ModerationLog (entity)
  └── Comment
 
 *  *( "for Minor: Content moderation AI (auto moderation, auto deletion, auto warning, etc.")*
+
 
 
 #### **🔹 User (entity) — core entity**
@@ -110,6 +122,111 @@ Stores moderation decisions for posts and comments.
 - useful for transparency and explanation
     
  This is a technical/log entity, not a core domain entity.
+
+**more detailed:**
+ **User**
+
+Represents a registered person in the system.
+Owns content, interacts with other users, and is the core of authentication and authorization.
+
+Why a separate entity:
+Authentication data, identifiers, and security-related fields change independently from profile or settings.
+Keeping User minimal prevents accidental coupling between security logic and presentation or preferences.
+
+**Profile**
+
+Stores public user information (display name, bio, avatar).
+Visible to other users.
+
+Why a separate entity:
+Public profile data changes frequently and independently from authentication logic.
+Separating it avoids unnecessary exposure of sensitive fields and allows profile evolution without impacting auth or sessions.
+
+**UserSettings**
+
+Stores user preferences such as language, privacy options, and notification settings.
+
+Why a separate entity:
+Settings evolve over time and differ per user but do not affect core identity.
+Isolation allows easy extension (new preferences) without modifying the User entity or authentication flows.
+
+**RefreshToken**
+
+Represents a long-lived authentication token used to refresh access tokens.
+Supports logout, token revocation, and multiple active sessions.
+
+Why a separate entity:
+Tokens have their own lifecycle (issue, revoke, expire) independent of the user.
+Storing them separately enables multi-device sessions, explicit logout, and security auditing.
+
+**Post**
+
+Represents user-generated content published to the feed.
+Can be moderated, liked, commented on, and reported.
+
+Why a separate entity:
+Posts have a full lifecycle (draft → published → moderated → deleted).
+They are central to many processes (feed, moderation, interactions), so isolating them avoids tight coupling with user or interaction logic.
+
+**Media**
+
+Represents media files (images, videos) attached to a post.
+
+Why a separate entity:
+Media handling (storage, formats, processing) changes independently from posts.
+Separation allows multiple media per post, reuse, and future extensions (e.g. CDN, video processing) without altering post logic.
+
+**Like**
+
+Represents a user’s reaction to a post.
+Stores who liked what and when.
+
+Why a separate entity:
+A like is not just a counter — it has ownership, time, and rules (unique per user/post).
+As an entity, it supports notifications, analytics, undo actions, and feed ranking.
+
+**Comment**
+
+Represents a textual response to a post.
+Can be edited, deleted, and moderated.
+
+Why a separate entity:
+Comments have their own lifecycle and moderation rules independent of posts.
+Treating them separately allows nested logic, permissions, and independent scaling.
+
+**Follow**
+
+Represents a subscription relationship between two users.
+
+Why a separate entity:
+Follow relationships are many-to-many and include metadata (date, status).
+As a standalone entity, they power feed generation, notifications, and recommendations without bloating the User model.
+
+**Notification**
+
+Represents an event delivered to a user (like, comment, follow, moderation result).
+Includes read/unread state and contextual payload.
+
+Why a separate entity:
+Notifications are persistent, stateful, and user-specific.
+They must be queryable, markable as read, and deletable — which requires a dedicated lifecycle.
+
+**Report**
+
+Represents a user complaint about a post or comment.
+
+Why a separate entity:
+Reports are created independently of moderation results and may accumulate over time.
+Separating them allows tracking abuse patterns, multiple reports per content, and proper moderation workflows.
+
+**ModerationLog**
+
+Represents moderation decisions made by AI or moderators.
+Stores history, status, and reasoning.
+
+Why a separate entity:
+Moderation is a process, not a flag.
+Logs must preserve history, support audits, and allow multiple decisions over time without overwriting content state.
 
 
 
