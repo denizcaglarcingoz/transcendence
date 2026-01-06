@@ -43,15 +43,4 @@ AuthResponseDto:
       type: string
       format: date-time
     user:
-      $ref: '#/UserShortDto'
-
-UserShortDto:
-  type: object
-  properties:
-    id:
-      type: string
-      format: uuid
-    username:
-      type: string
-    email:
-      type: string
+      $ref: '../common/user.schemas.yaml#/UserShortDto'
