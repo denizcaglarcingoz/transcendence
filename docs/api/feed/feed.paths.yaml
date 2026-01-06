@@ -1,0 +1,148 @@
+/feed:
+  get:
+    tags:
+      - Feed
+    summary: Load feed posts
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          default: 10
+    responses:
+      "200":
+        description: Feed loaded
+        content:
+          application/json:
+            schema:
+              $ref: "./feed.envelopes.yaml#/FeedResponseEnvelope"
+
+/posts/{postId}:
+  get:
+    tags:
+      - Feed
+    summary: Get post details
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "200":
+        description: Post details loaded
+        content:
+          application/json:
+            schema:
+              $ref: "./feed.envelopes.yaml#/PostDetailsEnvelope"
+
+/posts/{postId}/comments:
+  get:
+    tags:
+      - Feed
+    summary: Load post comments
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          default: 10
+    responses:
+      "200":
+        description: Comments loaded
+        content:
+          application/json:
+            schema:
+              $ref: "./feed.envelopes.yaml#/CommentsEnvelope"
+
+  post:
+    tags:
+      - Feed
+    summary: Add comment to post
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "./feed.schemas.yaml#/CreateCommentRequest"
+    responses:
+      "201":
+        description: Comment created
+        content:
+          application/json:
+            schema:
+              $ref: "./feed.envelopes.yaml#/CommentEnvelope"
+
+/posts/{postId}/like:
+  post:
+    tags:
+      - Feed
+    summary: Like or unlike post
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      "200":
+        description: Like toggled
+        content:
+          application/json:
+            schema:
+              $ref: "./feed.envelopes.yaml#/LikeEnvelope"
+
+/posts/{postId}/likes:
+  get:
+    tags:
+      - Feed
+    summary: Get users who liked post
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          default: 20
+    responses:
+      "200":
+        description: Likes loaded
+        content:
+          application/json:
+            schema:
+              $ref: "./feed.envelopes.yaml#/PostLikesEnvelope"

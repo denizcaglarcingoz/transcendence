@@ -103,12 +103,12 @@ All error responses follow the standard API envelope.
   "errors": ["Invalid request payload"]
 }
 ```
-#### **401 Bad Request**
+#### **401 Bad Unauthorized**
 ```json
 {
   "data": null,
   "isSuccess": false,
-  "errors": ["Invalid request payload"]
+  "errors": ["Unauthorized"]
 }
 ```
 ### **422 Unprocessable Entity**

@@ -1,11 +1,111 @@
 openapi: 3.0.3
+
 info:
   title: Transcendence API
   version: 1.0.0
 
-paths: #endpoints
-  $ref: './auth/auth.paths.yaml' 
+tags:
+  - name: Auth
+  - name: Feed
+
+paths:
+  # ---------- AUTH ----------
+  /auth/login:
+    $ref: ./auth/auth.paths.yaml#/auth/login
+
+  /auth/signup:
+    $ref: ./auth/auth.paths.yaml#/auth/signup
+
+  /auth/google:
+    $ref: ./auth/auth.paths.yaml#/auth/google
+
+  # ---------- FEED ----------
+  /feed:
+    $ref: ./feed/feed.paths.yaml#/feed
+
+  /posts/{postId}:
+    $ref: ./feed/feed.paths.yaml#/posts/{postId}
+
+  /posts/{postId}/comments:
+    $ref: ./feed/feed.paths.yaml#/posts/{postId}/comments
+
+  /posts/{postId}/like:
+    $ref: ./feed/feed.paths.yaml#/posts/{postId}/like
+
+  /posts/{postId}/likes:
+    $ref: ./feed/feed.paths.yaml#/posts/{postId}/likes
 
 components:
-  schemas: #JSONs
-    $ref: './common/api-response.yaml'
+  schemas:
+    # ---------- COMMON ----------
+    ApiMetadata:
+      $ref: ./common/ApiResponse.yaml#/ApiMetadata
+
+    ApiResponseBase:
+      $ref: ./common/ApiResponse.yaml#/ApiResponseBase
+
+    UserShortDto:
+      $ref: ./common/user.schemas.yaml#/UserShortDto
+
+    # ---------- AUTH ----------
+    LoginRequest:
+      $ref: ./auth/auth.schemas.yaml#/LoginRequest
+
+    SignupRequest:
+      $ref: ./auth/auth.schemas.yaml#/SignupRequest
+
+    GoogleAuthRequest:
+      $ref: ./auth/auth.schemas.yaml#/GoogleAuthRequest
+
+    AuthResponseDto:
+      $ref: ./auth/auth.schemas.yaml#/AuthResponseDto
+
+    AuthResponseEnvelope:
+      $ref: ./auth/auth.envelopes.yaml#/AuthResponseEnvelope
+
+    # ---------- FEED DTOs ----------
+    FeedResponseDto:
+      $ref: ./feed/feed.schemas.yaml#/FeedResponseDto
+
+    FeedPostDto:
+      $ref: ./feed/feed.schemas.yaml#/FeedPostDto
+
+    PostDetailsDto:
+      $ref: ./feed/feed.schemas.yaml#/PostDetailsDto
+
+    CommentsResponseDto:
+      $ref: ./feed/feed.schemas.yaml#/CommentsResponseDto
+
+    CommentDto:
+      $ref: ./feed/feed.schemas.yaml#/CommentDto
+
+    CreateCommentRequest:
+      $ref: ./feed/feed.schemas.yaml#/CreateCommentRequest
+
+    LikeResponseDto:
+      $ref: ./feed/feed.schemas.yaml#/LikeResponseDto
+
+    PostLikesResponseDto:
+      $ref: ./feed/feed.schemas.yaml#/PostLikesResponseDto
+
+    PostLikeUserDto:
+      $ref: ./feed/feed.schemas.yaml#/PostLikeUserDto
+
+    # ---------- FEED ENVELOPES ----------
+    FeedResponseEnvelope:
+      $ref: ./feed/feed.envelopes.yaml#/FeedResponseEnvelope
+
+    PostDetailsEnvelope:
+      $ref: ./feed/feed.envelopes.yaml#/PostDetailsEnvelope
+
+    CommentsEnvelope:
+      $ref: ./feed/feed.envelopes.yaml#/CommentsEnvelope
+
+    CommentEnvelope:
+      $ref: ./feed/feed.envelopes.yaml#/CommentEnvelope
+
+    LikeEnvelope:
+      $ref: ./feed/feed.envelopes.yaml#/LikeEnvelope
+
+    PostLikesEnvelope:
+      $ref: ./feed/feed.envelopes.yaml#/PostLikesEnvelope

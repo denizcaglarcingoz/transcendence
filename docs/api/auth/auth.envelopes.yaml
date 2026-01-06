@@ -1,6 +1,6 @@
 AuthResponseEnvelope: # adapted envelope for auth
   allOf:
-    - $ref: '../common/api-response.yaml#/ApiResponseBase' #inharitet from
+    - $ref: '../common/ApiResponse.yaml#/ApiResponseBase' #inharitet from
     - type: object
       properties:
         data:
