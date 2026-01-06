@@ -9,35 +9,223 @@ tags:
   - name: Feed
 
 paths:
-  # ---------- AUTH ----------
+  # =====================
+  # AUTH
+  # =====================
+
   /auth/login:
-    $ref: ./auth/auth.paths.yaml#/auth/login
+    post:
+      tags:
+        - Auth
+      summary: Login with email or username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./auth/auth.schemas.yaml#/LoginRequest
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: ./auth/auth.envelopes.yaml#/AuthResponseEnvelope
 
   /auth/signup:
-    $ref: ./auth/auth.paths.yaml#/auth/signup
+    post:
+      tags:
+        - Auth
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./auth/auth.schemas.yaml#/SignupRequest
+      responses:
+        "201":
+          description: Signup successful
+          content:
+            application/json:
+              schema:
+                $ref: ./auth/auth.envelopes.yaml#/AuthResponseEnvelope
 
   /auth/google:
-    $ref: ./auth/auth.paths.yaml#/auth/google
+    post:
+      tags:
+        - Auth
+      summary: Login or signup via Google OAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./auth/auth.schemas.yaml#/GoogleAuthRequest
+      responses:
+        "200":
+          description: Auth successful
+          content:
+            application/json:
+              schema:
+                $ref: ./auth/auth.envelopes.yaml#/AuthResponseEnvelope
 
-  # ---------- FEED ----------
+  # =====================
+  # FEED
+  # =====================
+
   /feed:
-    $ref: ./feed/feed.paths.yaml#/feed
+    get:
+      tags:
+        - Feed
+      summary: Load feed posts
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Feed loaded
+          content:
+            application/json:
+              schema:
+                $ref: ./feed/feed.envelopes.yaml#/FeedResponseEnvelope
 
   /posts/{postId}:
-    $ref: ./feed/feed.paths.yaml#/posts/{postId}
+    get:
+      tags:
+        - Feed
+      summary: Get post details
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Post details loaded
+          content:
+            application/json:
+              schema:
+                $ref: ./feed/feed.envelopes.yaml#/PostDetailsEnvelope
 
   /posts/{postId}/comments:
-    $ref: ./feed/feed.paths.yaml#/posts/{postId}/comments
+    get:
+      tags:
+        - Feed
+      summary: Load post comments
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Comments loaded
+          content:
+            application/json:
+              schema:
+                $ref: ./feed/feed.envelopes.yaml#/CommentsEnvelope
+
+    post:
+      tags:
+        - Feed
+      summary: Add comment to post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./feed/feed.schemas.yaml#/CreateCommentRequest
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: ./feed/feed.envelopes.yaml#/CommentEnvelope
 
   /posts/{postId}/like:
-    $ref: ./feed/feed.paths.yaml#/posts/{postId}/like
+    post:
+      tags:
+        - Feed
+      summary: Like or unlike post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                $ref: ./feed/feed.envelopes.yaml#/LikeEnvelope
 
   /posts/{postId}/likes:
-    $ref: ./feed/feed.paths.yaml#/posts/{postId}/likes
+    get:
+      tags:
+        - Feed
+      summary: Get users who liked post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Likes loaded
+          content:
+            application/json:
+              schema:
+                $ref: ./feed/feed.envelopes.yaml#/PostLikesEnvelope
 
 components:
   schemas:
-    # ---------- COMMON ----------
+    # COMMON
     ApiMetadata:
       $ref: ./common/ApiResponse.yaml#/ApiMetadata
 
@@ -46,66 +234,3 @@ components:
 
     UserShortDto:
       $ref: ./common/user.schemas.yaml#/UserShortDto
-
-    # ---------- AUTH ----------
-    LoginRequest:
-      $ref: ./auth/auth.schemas.yaml#/LoginRequest
-
-    SignupRequest:
-      $ref: ./auth/auth.schemas.yaml#/SignupRequest
-
-    GoogleAuthRequest:
-      $ref: ./auth/auth.schemas.yaml#/GoogleAuthRequest
-
-    AuthResponseDto:
-      $ref: ./auth/auth.schemas.yaml#/AuthResponseDto
-
-    AuthResponseEnvelope:
-      $ref: ./auth/auth.envelopes.yaml#/AuthResponseEnvelope
-
-    # ---------- FEED DTOs ----------
-    FeedResponseDto:
-      $ref: ./feed/feed.schemas.yaml#/FeedResponseDto
-
-    FeedPostDto:
-      $ref: ./feed/feed.schemas.yaml#/FeedPostDto
-
-    PostDetailsDto:
-      $ref: ./feed/feed.schemas.yaml#/PostDetailsDto
-
-    CommentsResponseDto:
-      $ref: ./feed/feed.schemas.yaml#/CommentsResponseDto
-
-    CommentDto:
-      $ref: ./feed/feed.schemas.yaml#/CommentDto
-
-    CreateCommentRequest:
-      $ref: ./feed/feed.schemas.yaml#/CreateCommentRequest
-
-    LikeResponseDto:
-      $ref: ./feed/feed.schemas.yaml#/LikeResponseDto
-
-    PostLikesResponseDto:
-      $ref: ./feed/feed.schemas.yaml#/PostLikesResponseDto
-
-    PostLikeUserDto:
-      $ref: ./feed/feed.schemas.yaml#/PostLikeUserDto
-
-    # ---------- FEED ENVELOPES ----------
-    FeedResponseEnvelope:
-      $ref: ./feed/feed.envelopes.yaml#/FeedResponseEnvelope
-
-    PostDetailsEnvelope:
-      $ref: ./feed/feed.envelopes.yaml#/PostDetailsEnvelope
-
-    CommentsEnvelope:
-      $ref: ./feed/feed.envelopes.yaml#/CommentsEnvelope
-
-    CommentEnvelope:
-      $ref: ./feed/feed.envelopes.yaml#/CommentEnvelope
-
-    LikeEnvelope:
-      $ref: ./feed/feed.envelopes.yaml#/LikeEnvelope
-
-    PostLikesEnvelope:
-      $ref: ./feed/feed.envelopes.yaml#/PostLikesEnvelope
