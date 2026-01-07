@@ -61,3 +61,22 @@ FollowingListEnvelope:
 ProfileUpdatedEnvelope:
   allOf:
     - $ref: ../common/ApiResponse.yaml#/ApiResponseBase
+
+OtherProfileEnvelope:
+  allOf:
+    - $ref: ../common/ApiResponse.yaml#/ApiResponseBase
+    - type: object
+      properties:
+        data:
+          $ref: ./profile.schemas.yaml#/OtherProfileDto
+
+
+OtherProfilePostsEnvelope:
+  allOf:
+    - $ref: ../common/ApiResponse.yaml#/ApiResponseBase
+    - type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: ./profile.schemas.yaml#/ProfilePostThumbDto

@@ -17,7 +17,7 @@ _(Opened from Feed by clicking post image or comments icon)_
 - Existing comments are loaded automatically
 
 ## **2. Load posts details**
-#### **Endpoint** GET /posts/{postId}
+#### **Endpoint**  GET /posts/{postId}/comments
 
 ##### **Success Response (200 OK)**
 ```json
@@ -88,7 +88,7 @@ pageSize    (number, optional, default = 10)
 }
 ```
 
-##### **Success Created (201 OK)**
+##### **Success Response (201 Created)**
 ```json
 {
   "data": {
@@ -144,6 +144,8 @@ pageSize    (number, optional, default = 10)
 ## **7. Delete own post
 
 ###### **Endpoint** DELETE /posts/{postId}
+
+Deletes post and all associated comments and likes
 ### **Preconditions**
 
 - User is author of the post
@@ -157,7 +159,8 @@ pageSize    (number, optional, default = 10)
 }
 ```
 
-After deletion:
+
+After deletion
 
 - Modal is closed
 - Feed is refreshed or updated locally
@@ -183,6 +186,29 @@ public class CommentDto
 }
 ```
 
+---
+
+## OTHER PROFILE — POST OPEN (Post Details Modal)
+
+This screen reuses existing Feed Post APIs.
+
+### Used endpoints
+
+| Purpose | Method | Endpoint |
+|------|------|---------|
+| Load post details | GET | /posts/{postId} |
+| Load comments | GET | /posts/{postId}/comments |
+| Add comment | POST | /posts/{postId}/comments |
+| Like / Unlike post | POST | /posts/{postId}/like |
+| View post likes | GET | /posts/{postId}/likes |
+
+### Notes
+
+- Behavior is identical to post opening from Feed
+- Author is not current user
+- Delete post action is not available
+- Same DTOs and envelopes are reused
+
 ## **Error Handling (Standard)**
 
 All error responses follow the standard API envelope.
@@ -194,7 +220,7 @@ All error responses follow the standard API envelope.
   "errors": ["Unauthorized"]
 }
 ```
-#### **403 Bad Request**
+#### **400 Bad Request**
 ```json
 {
   
