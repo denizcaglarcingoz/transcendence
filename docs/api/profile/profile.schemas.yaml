@@ -75,3 +75,28 @@ UpdateProfileRequest:
     username:
       type: string
       maxLength: 30
+
+OtherProfileDto:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    username:
+      type: string
+    fullName:
+      type: string
+    bio:
+      type: string
+      nullable: true
+    avatarUrl:
+      type: string
+      nullable: true
+    postsCount:
+      type: integer
+    followersCount:
+      type: integer
+    followingCount:
+      type: integer
+    isFollowedByMe:
+      type: boolean

@@ -335,6 +335,158 @@ paths:
               schema:
                 $ref: ./common/ApiResponse.yaml#/ApiResponseBase
 
+  /chats:
+    get:
+      tags: [Chats]
+      summary: Get user chat list
+      responses:
+        "200":
+          description: Chats loaded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [isSuccess, errors]
+                properties:
+                  isSuccess:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: ./chats/chats.schemas.yaml#/ChatListItemDto
+
+  /chats/{chatId}/messages:
+    get:
+      tags: [Chats]
+      summary: Get chat messages
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        "200":
+          description: Messages loaded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [isSuccess, errors]
+                properties:
+                  isSuccess:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: ./chats/chats.schemas.yaml#/MessageDto
+
+  /chats/{chatId}/read:
+    post:
+      tags: [Chats]
+      summary: Mark chat messages as read
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Messages marked as read
+          content:
+            application/json:
+              schema:
+                $ref: ./common/ApiResponse.yaml#/ApiResponseBase
+
+  /profile/{userId}:
+    get:
+      tags: [Profile]
+      summary: Get other user profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Profile loaded
+          content:
+            application/json:
+              schema:
+                $ref: ./profile/profile.envelopes.yaml#/OtherProfileEnvelope
+
+  /profile/{userId}/posts:
+    get:
+      tags: [Profile]
+      summary: Get user posts
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+      responses:
+        "200":
+          description: Posts loaded
+          content:
+            application/json:
+              schema:
+                $ref: ./profile/profile.envelopes.yaml#/OtherProfilePostsEnvelope
+
+  /profile/{userId}/follow:
+    post:
+      tags: [Profile]
+      summary: Follow or unfollow user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Follow state changed
+          content:
+            application/json:
+              schema:
+                $ref: ./common/ApiResponse.yaml#/ApiResponseBase
 
 components:
   schemas:
