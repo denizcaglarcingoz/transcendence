@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Microsoft.AspNetCore.Mvc;
 using Transcendence.Application.Common.Responses;
 
@@ -11,5 +12,12 @@ public static class ApiResponseExtensions
         T data)
     {
         return controller.Ok(ApiResponse<T>.Success(data));
+    }
+
+
+    public static ActionResult<ApiResponse<T>> FailResponse<T> (
+        this ControllerBase controller, IReadOnlyList<string> errors)
+    {
+        return controller.BadRequest(ApiResponse<T>.Fail(errors.ToArray()));
     }
 }
