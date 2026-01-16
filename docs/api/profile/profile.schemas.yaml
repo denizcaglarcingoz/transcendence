@@ -69,12 +69,16 @@ UpdateProfileRequest:
     fullName:
       type: string
       maxLength: 50
+    username:
+      type: string
+      minLength: 3
+      maxLength: 30
     bio:
       type: string
       maxLength: 150
-    username:
+    avatarUrl:
       type: string
-      maxLength: 30
+  additionalProperties: false
 
 OtherProfileDto:
   type: object

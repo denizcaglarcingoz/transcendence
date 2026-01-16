@@ -55,6 +55,7 @@ User edits **name / username / bio** and clicks **Save**.
 	"fullName": "Dipprokash Sardar",
 	"username": "dipp_sardar",
 	"bio": "Welcome to my profile!"
+	"avatarUrl": "/photo.jpg"
 }
 ```
 ### Validation rules
