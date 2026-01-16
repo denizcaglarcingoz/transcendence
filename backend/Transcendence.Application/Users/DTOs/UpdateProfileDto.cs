@@ -5,4 +5,6 @@ public sealed class UpdateProfileDto
     public string? FullName { get; init; }
     public string? Bio { get; init; }
     public string? Username { get; init; }
+    public string? AvatarUrl { get; init; }
+
 }

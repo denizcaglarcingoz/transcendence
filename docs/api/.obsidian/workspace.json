@@ -11,10 +11,14 @@
             "id": "1ec43fdc7ba62f15",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "profile/OTHER PROFILE — MAIN SCREEN.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "OTHER PROFILE — MAIN SCREEN"
             }
           }
         ]
@@ -176,6 +180,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "1ec43fdc7ba62f15",
-  "lastOpenFiles": []
+  "active": "3808cc35dc2d062c",
+  "lastOpenFiles": [
+    "profile/OWN PROFILE — EDIT PROFILE Screen-Scenarios-API-DTO-Errors.md.md",
+    "profile/OTHER PROFILE — MAIN SCREEN.md"
+  ]
 }

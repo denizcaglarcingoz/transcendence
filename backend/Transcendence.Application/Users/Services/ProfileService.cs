@@ -40,7 +40,7 @@ public sealed class ProfileService // collects meaning, repositories provide fac
             FollowingCount = await _followRepository.CountFollowingAsync(userId)
         };
     }
-    public async Task UpdateProfileAsync(Guid userId, UpdateProfileDto dto)
+    public async Task<MyProfileDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found.");
@@ -50,8 +50,19 @@ public sealed class ProfileService // collects meaning, repositories provide fac
             bio: dto.Bio,
             username: dto.Username
         );
-
+           
         await _userRepository.SaveChangesAsync();
+        return new MyProfileDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            FullName = user.FullName,
+            Bio = user.Bio,
+            AvatarUrl = user.AvatarUrl,
+            PostsCount = await _postRepository.CountByUserIdAsync(userId),
+            FollowersCount = await _followRepository.CountFollowersAsync(userId),
+            FollowingCount = await _followRepository.CountFollowingAsync(userId)
+        };
     }
     public async Task<OtherProfileDto> GetOtherProfileAsync(
         Guid targetUserId,
