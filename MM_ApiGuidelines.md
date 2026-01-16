@@ -25,7 +25,7 @@ The frontend expects the following standard HTTP responses:
 
 ## 5. Standard Response Envelope
 Every API response must follow this structure to ensure the Frontend can parse it safely:
-
+```
 {
   "data": {},        // The requested object or array
   "isSuccess": true, // Boolean flag
@@ -37,14 +37,14 @@ Every API response must follow this structure to ensure the Frontend can parse i
     "currentPage": 1
   }
 }
-
+```
 /**
  * CORE SOCIAL NETWORK TYPES - FRONTEND
  */
 
 // --- Notifications ---
 export type NotificationSeverity = 'info' | 'warning' | 'error';
-
+```
 export interface Notification {
   id: string;
   type: NotificationSeverity;
@@ -52,20 +52,21 @@ export interface Notification {
   timestamp: string; // ISO 8601 Format
   isRead: boolean;
 }
-
+```
 // --- Permissions (CASL Compatible) ---
 export type Action = 'create' | 'read' | 'update' | 'delete' | 'manage';
 export type Subject = 'Post' | 'Comment' | 'File' | 'User' | 'Notification';
-
+```
 export interface UserPermission {
   action: Action;
   subject: Subject;
   conditions?: Record<string, any>; // e.g., { "ownerId": "123" }
 }
+```
 
 // --- File Management ---
 export type FileStatus = 'uploading' | 'processing' | 'ready' | 'failed';
-
+```
 export interface FileMetadata {
   id: string;
   fileName: string;
@@ -76,8 +77,9 @@ export interface FileMetadata {
   status: FileStatus;
   ownerId: string;
 }
-
+```
 // --- Standard API Response Envelope ---
+```
 export interface ApiResponse<T> {
   data: T;
   isSuccess: boolean;
@@ -89,3 +91,4 @@ export interface ApiResponse<T> {
     currentPage: number;
   };
 }
+```
