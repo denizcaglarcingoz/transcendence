@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "profile": "Profil",
+    "friends": "Amis",
+    "chat": "Chat",
+    "logout": "D\u00e9connexion"
+  },
+  "login": {
+    "title": "Connexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "submit": "Se connecter"
+  },
+  "profile": {
+    "title": "Mon profil",
+    "save": "Enregistrer",
+    "uploadAvatar": "T\u00e9l\u00e9verser un avatar"
+  },
+  "friends": {
+    "title": "Amis",
+    "add": "Ajouter un ami",
+    "remove": "Retirer",
+    "online": "En ligne",
+    "offline": "Hors ligne"
+  },
+  "chat": {
+    "title": "Chat",
+    "send": "Envoyer",
+    "placeholder": "\u00c9crire un message..."
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue."
+  }
+}

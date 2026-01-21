@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "profile": "Profile",
+    "friends": "Friends",
+    "chat": "Chat",
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Login"
+  },
+  "profile": {
+    "title": "My profile",
+    "save": "Save",
+    "uploadAvatar": "Upload avatar"
+  },
+  "friends": {
+    "title": "Friends",
+    "add": "Add friend",
+    "remove": "Remove",
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "chat": {
+    "title": "Chat",
+    "send": "Send",
+    "placeholder": "Write a message..."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong."
+  }
+}
