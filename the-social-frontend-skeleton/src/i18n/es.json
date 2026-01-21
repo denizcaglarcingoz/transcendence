@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "profile": "Perfil",
+    "friends": "Amigos",
+    "chat": "Chat",
+    "logout": "Cerrar sesi\u00f3n"
+  },
+  "login": {
+    "title": "Iniciar sesi\u00f3n",
+    "email": "Correo",
+    "password": "Contrase\u00f1a",
+    "submit": "Entrar"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "save": "Guardar",
+    "uploadAvatar": "Subir avatar"
+  },
+  "friends": {
+    "title": "Amigos",
+    "add": "Agregar amigo",
+    "remove": "Eliminar",
+    "online": "En l\u00ednea",
+    "offline": "Desconectado"
+  },
+  "chat": {
+    "title": "Chat",
+    "send": "Enviar",
+    "placeholder": "Escribe un mensaje..."
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Algo sali\u00f3 mal."
+  }
+}
