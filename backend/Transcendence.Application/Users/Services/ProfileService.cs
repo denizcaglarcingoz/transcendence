@@ -3,9 +3,6 @@ using Transcendence.Application.Users.Interfaces;
 using Transcendence.Application.UserFollows.Interfaces;
 using Transcendence.Application.Posts.Interfaces;
 
-
-
-
 namespace Transcendence.Application.Users.Services;
 
 public sealed class ProfileService // collects meaning, repositories provide facts. (Querry)

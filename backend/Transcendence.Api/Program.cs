@@ -33,7 +33,6 @@ builder.Services.AddControllers();
 
 	it is registered in DI
 */
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -47,7 +46,6 @@ app.UseAuthorization();
 app.MapChatEndpoints();
 app.MapControllers();
 app.Run();
-
 
 /*
 1. builder = WebApplication.CreateBuilder()
