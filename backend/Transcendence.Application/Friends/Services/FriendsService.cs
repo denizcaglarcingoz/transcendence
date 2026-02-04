@@ -36,7 +36,7 @@ public sealed class FriendsService : IFriendsService // use-case (Command)
 		_ = await _userRepository.GetByIdAsync(requesterId) ?? throw new NotFoundException("Requester not found.");
 		_ = await _userRepository.GetByIdAsync(targetUserId) ?? throw new NotFoundException("Target user not found.");
 
-		if (await _friendshipRepository.ExistsAsync(requesterId, targetUserId))
+		if (await _friendshipRepository.IsFriendAsync(requesterId, targetUserId))
 			throw new AlreadyFriendsException();
 
 		if (await _friendRequestRepository.ExistsPendingAsync(requesterId, targetUserId) ||
@@ -44,7 +44,7 @@ public sealed class FriendsService : IFriendsService // use-case (Command)
 			throw new FriendRequestAlreadyExistsException();
 
 		var requestId = Guid.NewGuid();
-		var request = new FriendRequest(requestId, requesterId, targetUserId, DateTime.UtcNow);
+		var request = new FriendshipRequest(requestId, requesterId, targetUserId, DateTime.UtcNow);
 		await _friendRequestRepository.AddAsync(request);
 
 		return requestId;
@@ -59,7 +59,7 @@ public sealed class FriendsService : IFriendsService // use-case (Command)
 		if (request.TargetUserId != currentUserId)
 			throw new NotAllowedToFriendException("You cannot accept this friend request.");
 
-		if (await _friendshipRepository.ExistsAsync(request.RequesterId, request.TargetUserId))
+		if (await _friendshipRepository.IsFriendAsync(request.RequesterId, request.TargetUserId))
 		{
 			await _friendRequestRepository.RemoveAsync(requestId); // cleanup
 			return;
@@ -92,7 +92,7 @@ public sealed class FriendsService : IFriendsService // use-case (Command)
 	public async Task RemoveFriendAsync(Guid currentUserId, Guid friendUserId)
 	{
 		_ = await _userRepository.GetByIdAsync(friendUserId) ?? throw new NotFoundException("Friend user not found.");
-		if (!await _friendshipRepository.ExistsAsync(currentUserId, friendUserId))
+		if (!await _friendshipRepository.IsFriendAsync(currentUserId, friendUserId))
 			throw new NotFriendsException();
 		await _friendshipRepository.RemoveAsync(currentUserId, friendUserId);
 	}

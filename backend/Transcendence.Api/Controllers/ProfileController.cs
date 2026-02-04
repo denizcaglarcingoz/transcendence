@@ -28,6 +28,16 @@ public sealed class ProfileController : ControllerBase
         return this.OkResponse(profile);
     }
 
+	//GET /profile/{userId}
+	[HttpGet("{userId:guid}")]
+	public async Task<ActionResult<ApiResponse<OtherProfileDto>>> GetOtherProfile(Guid userId)
+	{
+		Guid viewerId = GetUserId(); //todo auth
+
+		var otherProfile = await _profileService.GetOtherProfileAsync(userId, viewerId);
+		return this.OkResponse(otherProfile);
+
+	}
 
 	// PATCH /profile/me
 	[HttpPatch("me")]
@@ -41,16 +51,14 @@ public sealed class ProfileController : ControllerBase
         return this.OkResponse(updatedProfile);
     }
 
-	//GET /profile/{userId}
-	[HttpGet("{userId:guid}")]
-    public async Task<ActionResult<ApiResponse<OtherProfileDto>>> GetOtherProfile(Guid userId)
+	// PATCH /profile/password
+    [HttpPatch("password")]
+    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
     {
-        Guid viewerId = GetUserId(); //todo auth
-
-        var otherProfile = await _profileService.GetOtherProfileAsync(userId, viewerId);
-        return this.OkResponse(otherProfile);
-
-    }
+        Guid userId = GetUserId(); //todo auth
+        await _profileService.ChangePasswordAsync(userId, dto);
+        return NoContent(); // 204 No Content
+	}
 
 	private Guid GetUserId()
 	{

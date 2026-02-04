@@ -14,6 +14,8 @@ public sealed class UpdateProfileDto
 
 	public string? AvatarUrl { get; init; } // Nullable = optional update
 
+	public string? Password { get; init; } // Nullable = optional update
+
 }
 
 

@@ -7,4 +7,5 @@ public interface IProfileService
 	Task<MyProfileDto> GetMyProfileAsync(Guid userId);                 // throws NotFoundException
 	Task<MyProfileDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto);
 	Task<OtherProfileDto> GetOtherProfileAsync(Guid userId, Guid viewerId); // throws NotFoundException
+	Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto);
 }
