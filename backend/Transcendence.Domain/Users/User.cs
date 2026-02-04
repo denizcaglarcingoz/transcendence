@@ -4,6 +4,7 @@ public sealed class User
 {
 	public Guid Id { get; private set; }
 	public string Username { get; private set; } = default!;
+	public string PasswordHash { get; private set; } = default!;
 	public string Email { get; private set; } = default!;
 	public string FullName { get; private set; } = default!;
 	public string? Bio { get; private set; }
@@ -13,6 +14,11 @@ public sealed class User
 #pragma warning disable CS8618
 	private User() { }
 #pragma warning restore CS8618
+
+	public void SetPasswordHash(string passwordHash)
+	{
+		PasswordHash = passwordHash;
+	}
 
 	public User(Guid id, string username, string email, string fullName, DateTime createdAt)
 	{

@@ -23,12 +23,11 @@ paths:
 #POST auth/2fa/generate
 
 #users
-#GET profile/me
-#GET profile/{userId}
-#PATCH profile/me
-#PATCH profile/me/password
-#POST profile/me/avatar
-#DELETE me
+#+--#GET profile/me
+#+--#GET profile/{userId}
+#+--#PATCH profile/me
+#+--#PATCH profile/password
+#+--#DELETE me
 
 ##friends
 #+--#GET friends/list

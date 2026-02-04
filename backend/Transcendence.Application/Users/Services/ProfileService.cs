@@ -11,15 +11,18 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	private readonly IUserRepository _userRepository;
 	private readonly IFriendshipRepository _friendsRepository;
 	private readonly IPostRepository _postRepository;
+	private readonly IPasswordHasher _passwordHasher;
 
 
 	public ProfileService(IFriendshipRepository friendsRepository, 
-						 IUserRepository userRepository,
-						 IPostRepository postRepository)
+						IUserRepository userRepository,
+						IPostRepository postRepository,
+						IPasswordHasher passwordHasher)
 	{
 		_friendsRepository = friendsRepository;
 		_userRepository = userRepository;
 		_postRepository = postRepository;
+		_passwordHasher = passwordHasher;
 	}
 	public async Task<MyProfileDto> GetMyProfileAsync(Guid userId)
 	{
@@ -114,6 +117,20 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 			AreWeFriends = areWeFrinds
 		};
 	}
+
+	//PATCH /profile/password
+	public async Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto)
+	{
+		var user = await _userRepository.GetByIdAsync(userId)
+			?? throw new NotFoundException("User not found.");
+		// Verify current password
+		if (!_passwordHasher.VerifyHashedPassword(user.PasswordHash, dto.CurrentPassword))
+			throw new UnauthorizedAccessException("Current password is incorrect.");
+
+		user.SetPasswordHash(_passwordHasher.HashPassword(dto.NewPassword));
+		await _userRepository.SaveChangesAsync();
+	}
+
 }
 /*
 	Service (Application layer)
