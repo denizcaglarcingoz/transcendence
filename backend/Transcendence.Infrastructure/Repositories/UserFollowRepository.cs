@@ -16,9 +16,8 @@ public sealed class UserFollowRepository : IUserFollowRepository
     {
         return _db.UserFollows.AnyAsync(x => x.FollowingId == followingId &&
         x.FollowerId == followerId );
-        
     }
-    public async    Task AddAsync(UserFollow follow)
+    public async Task AddAsync(UserFollow follow)
     {
        await  _db.UserFollows.AddAsync(follow);
     }

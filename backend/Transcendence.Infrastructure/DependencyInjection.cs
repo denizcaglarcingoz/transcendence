@@ -20,7 +20,9 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString)); // config DBcontetx and uses Npgsql.EntityFrameworkCore.PostgreSQL
         services.AddScoped<IUserRepository, UserRepository>(); // when IUserRepository needed - creates UserRepository
         services.AddScoped<IUserFollowRepository, UserFollowRepository>(); 
-        services.AddScoped<IPostRepository, PostRepository>(); 
+        services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<IMessageRepository, MessageRepository>();
+
         return services;
     }
 }
