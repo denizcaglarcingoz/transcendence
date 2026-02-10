@@ -10,13 +10,13 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 {
 	private readonly IUserRepository _userRepository;
 	private readonly IFriendshipRepository _friendsRepository;
-	private readonly IPostRepository _postRepository;
+	private readonly IPostsRepository _postRepository;
 	private readonly IPasswordHasher _passwordHasher;
 
 
 	public ProfileService(IFriendshipRepository friendsRepository, 
 						IUserRepository userRepository,
-						IPostRepository postRepository,
+						IPostsRepository postRepository,
 						IPasswordHasher passwordHasher)
 	{
 		_friendsRepository = friendsRepository;

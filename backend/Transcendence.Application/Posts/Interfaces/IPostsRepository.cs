@@ -2,7 +2,7 @@ using Transcendence.Application.Posts.DTOs;
 using Transcendence.Domain.Posts;
 namespace Transcendence.Application.Posts.Interfaces;
 
-public interface IPostRepository
+public interface IPostsRepository
 {
     Task<int> CountByUserIdAsync(Guid userId, CancellationToken ct);
 

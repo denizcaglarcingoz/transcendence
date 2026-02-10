@@ -1,21 +1,25 @@
 ﻿using System.ComponentModel.DataAnnotations;
+
+using Transcendence.Domain.Posts;
+
 using Transcendence.Application.Common.Exceptions;
 using Transcendence.Application.Files.Interface;
 using Transcendence.Application.Friends.Interfaces;
 using Transcendence.Application.Posts.DTOs;
 using Transcendence.Application.Posts.Interfaces;
+
 using Transcendence.Application.Users.Interfaces;
-using Transcendence.Domain.Posts;
+
 
 namespace Transcendence.Application.Posts.Services;
-public class PostService : IPostService
+public class PostsService : IPostsService
 {
-	private readonly IPostRepository _postRepository;
+	private readonly IPostsRepository _postRepository;
 	private readonly IFriendshipRepository _friendshipRepository;
 	private readonly IUserRepository _userRepository;
 	private readonly IFilesRepository _filesRepository;
 	private readonly IFilesService _filesService;
-	public PostService(IPostRepository postRepository,
+	public PostsService(IPostsRepository postRepository,
 						IFriendshipRepository friendshipRepository,
 						IUserRepository userRepository,
 						IFilesRepository filesRepository,
@@ -200,7 +204,7 @@ public class PostService : IPostService
 
 	// Idempotent: returns true if state changed, false if already in desired state
 	//Task LikePostAsync(Guid postId, Guid currentUserId, CancellationToken ct); // POST /posts/{postId}/like
-	//Task UnlikePostAsync(Guid postId, Guid currentUserId, CancellationToken ct); // DELETE /posts/{postId}/like
+	//Task(Guid postId, Guid currentUserId, CancellationToken ct); // DELETE /posts/{postId}/like
 	//Task<int> GetLikeCountAsync(Guid postId, CancellationToken ct); // GET /posts/{postId}/likes/count
 
 	//Comments

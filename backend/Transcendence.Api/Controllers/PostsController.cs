@@ -11,63 +11,63 @@ namespace Transcendence.Api.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("post")]
-public sealed class PostController : ControllerBase
+[Route("posts")]
+public sealed class PostsController : ControllerBase
 {
-    private readonly IPostService _postService;
-    public PostController(IPostService postService) {_postService = postService;}
+    private readonly IPostsService _postsService;
+    public PostsController(IPostsService postsService) {_postsService = postsService;}
 
-	//GET /post/{postId}
+	//GET /posts/{postId}
 	[HttpGet("{postId:guid}")]
 	public async Task<ActionResult<ApiResponse<PostDetailedDto>>> GetPost(Guid postId, CancellationToken ct)
 	{
 		Guid currentUserId = GetUserId();
-		var post = await _postService.GetPostAsync(postId, currentUserId, ct);
+		var post = await _postsService.GetPostAsync(postId, currentUserId, ct);
 		return this.OkResponse(post);
 	}
 
-	//POST /post
+	//POST /posts
 	[HttpPost]
 	public async Task<ActionResult<ApiResponse<PostDto>>> CreatePost([FromBody] CreatePostDto dto, CancellationToken ct)
 	{
 		Guid currentUserId = GetUserId();
-		var post = await _postService.CreatePostAsync(currentUserId, dto, ct);
+		var post = await _postsService.CreatePostAsync(currentUserId, dto, ct);
 		return StatusCode(StatusCodes.Status201Created, this.OkResponse(post));
 	}
 
-	//DELETE /post/{postId}
+	//DELETE /posts/{postId}
 	[HttpDelete("{postId:guid}")]
 	public async Task<IActionResult> DeletePost(Guid postId, CancellationToken ct)
 	{
 		Guid currentUserId = GetUserId();
-		await _postService.DeletePostAsync(postId, currentUserId, ct);
+		await _postsService.DeletePostAsync(postId, currentUserId, ct);
 		return NoContent();
 	}
 
-	// POST /post/{postId}/like
-	[HttpPost("{postId:guid}/like")]
+	// POST /posts/{postId}/likes
+	[HttpPost("{postId:guid}/likes")]
 	public async Task<IActionResult> LikePost(Guid postId, CancellationToken ct)
 	{
 		Guid currentUserId = GetUserId();
-		await _postService.LikePostAsync(postId, currentUserId, ct);
+		await _postsService.LikePostAsync(postId, currentUserId, ct);
 		return NoContent();
 	}
 
-	// DELETE /posts/{postId}/like
-	[HttpDelete("{postId:guid}/like")]
+	// DELETE /posts/{postId}/likes
+	[HttpDelete("{postId:guid}/likes")]
 	public async Task<IActionResult> UnlikePost([FromRoute] Guid postId, CancellationToken ct)
 	{
 		Guid currentUserId = GetUserId();
-		await _postService.UnlikePostAsync(postId, currentUserId, ct);
+		await _postsService.UnlikePostAsync(postId, currentUserId, ct);
 		return NoContent();
 	}
 
-	// POST /posts/{postId}/comment
-	[HttpPost("{postId:guid}/comment")]
+	// POST /posts/{postId}/comments
+	[HttpPost("{postId:guid}/comments")]
 	public async Task<ActionResult<ApiResponse<CommentDto>>> AddComment(Guid postId, [FromBody] string content, CancellationToken ct)
 	{
 		Guid currentUserId = GetUserId();
-		var comment = await _postService.AddCommentAsync(postId, currentUserId, content, ct);
+		var comment = await _postsService.AddCommentAsync(postId, currentUserId, content, ct);
 		return StatusCode(StatusCodes.Status201Created, this.OkResponse(comment));
 	}
 
@@ -76,7 +76,7 @@ public sealed class PostController : ControllerBase
 	public async Task<IActionResult> DeleteComment(Guid postId, Guid commentId, CancellationToken ct)
 	{
 		Guid currentUserId = GetUserId();
-		await _postService.DeleteCommentAsync(postId, commentId, currentUserId, ct);
+		await _postsService.DeleteCommentAsync(postId, commentId, currentUserId, ct);
 		return NoContent();
 	}
 
