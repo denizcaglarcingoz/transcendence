@@ -13,56 +13,51 @@ servers:
 
 paths:
 #authentication
-#POST auth/login
-#POST auth/register
-#POST auth/google
-#POST auth/logout
-#POST auth/2fa/enable
-#POST auth/2fa/verify
-#POST auth/2fa/disable
-#POST auth/2fa/generate
+#POST /auth/login
+#POST /auth/register
+#POST /auth/google
+#POST /auth/logout
+#POST /auth/2fa/enable
+#POST /auth/2fa/verify
+#POST /auth/2fa/disable
+#POST /auth/2fa/generate
 
 #users
-#+--#GET profile/me
-#+--#GET profile/{userId}
-#+--#PATCH profile/me
-#+--#PATCH profile/password
-#+--#DELETE me
+#+--#GET /profile/me
+#+--#GET /profile/{userId}
+#+--#PATCH /profile/me
+#+--#PATCH /profile/password
+#+--#DELETE /me
 
 ##friends
-#+--#GET friends/list
-#+--#POST friends/{username}
-#+--#DELETE friends/{username}
-#+--#GET friends/requests
-#+--#POST friends/requests/{requestId}/accept
-#+--#POST friends/requests/{requestId}/decline
+#+--#GET /friends/list
+#+--#POST /friends/{username}
+#+--#DELETE /friends/{username}
+#+--#GET /friends/requests
+#+--#POST /friends/requests/{requestId}/accept
+#+--#POST /friends/requests/{requestId}/decline
 
 #file upload
-#+--GET files/{fileId}
-#+--POST files
-#+--DELETE files/{fileId}
+#+--GET /files/{fileId}
+#+--POST /files
+#+--DELETE /files/{fileId}
 
 #posts
-#+-#GET posts/{postId}
-#+-#POST posts
-#+-#DELETE posts/{postId}
+#+-#GET /posts/{postId}
+#+-#POST /posts
+#+-#DELETE /posts/{postId}
 
-#+-#POST posts/{postId}/likes
-#+-#DELETE posts/{postId}/likes
+#+-#POST /posts/{postId}/likes
+#+-#DELETE /posts/{postId}/likes
 
-#+-#POST posts/{postId}/comments
-#+-#DELETE posts/{postId}/comments/{commentId}
+#+-#POST /posts/{postId}/comments
+#+-#DELETE /posts/{postId}/comments/{commentId}
 
-#--#GET posts/{postId}/likes?take=20&cursor=<nextCursor>
-#--#GET posts/{postId}/comments?take=20
-#--#GET posts/{postId}/comments?take=20&cursor=<nextCursor>
-#--#GET posts/me?take=20
-#--#GET posts/me?take=20&cursor=<nextCursor>
-#--#GET posts/by-username/{username}?take=20
-#--#GET posts/by-username/{username}?take=20&cursor=<nextCursor>
-#--#GET posts/feed?take=20
-#--#GET posts/feed?take=20&cursor=<nextCursor>
-
+#--#GET /posts/{postId}/likes?take=20&cursor=<nextCursor>
+#--#GET /posts/{postId}/comments?take=20&cursor=<nextCursor>
+#--#GET /posts/me?take=20&cursor=<nextCursor>
+#--#GET /posts/by-username/{username}?take=20&cursor=<nextCursor>
+#--#GET /posts/feed?take=20&cursor=<nextCursor>
 
 
 #notifications
