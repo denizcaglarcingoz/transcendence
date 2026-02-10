@@ -16,12 +16,12 @@ public sealed class FilesService : IFilesService
 	public IFilesRepository _fileRepository;
 	public IFilesStorage _filesStorage;
 	public IUserRepository _userRepository;
-	public IPostRepository _postRepository;
+	public IPostsRepository _postRepository;
 	public IFriendshipRepository _friendshipRepository;
 	public FilesService(IFilesRepository fileRepository,
 						IFilesStorage fileStorage,
 						IUserRepository userRepository,
-						IPostRepository postRepository,
+						IPostsRepository postRepository,
 						IFriendshipRepository friendshipRepository)
 	{
 		_fileRepository = fileRepository;

@@ -1,5 +1,3 @@
-using System.Xml.Linq;
-
 namespace Transcendence.Domain.Posts;
 
 public sealed class Post

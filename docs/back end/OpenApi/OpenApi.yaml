@@ -42,25 +42,26 @@ paths:
 #+--POST files
 #+--DELETE files/{fileId}
 
-#post
-#+-#GET post/{postId}
-#+-#POST post
-#+-#DELETE post/{postId}
+#posts
+#+-#GET posts/{postId}
+#+-#POST posts
+#+-#DELETE posts/{postId}
 
-#--#GET post/{postId}/likes?take=20&cursor=<nextCursor>
-#+-#POST post/{postId}/like
-#+-#DELETE post/{postId}/like
+#+-#POST posts/{postId}/likes
+#+-#DELETE posts/{postId}/likes
 
-#+-#POST post/{postId}/comment
-#+-#DELETE post/{postId}/comment/{commentId}
+#+-#POST posts/{postId}/comments
+#+-#DELETE posts/{postId}/comments/{commentId}
 
-#posts/feed
-#GET /posts/me?take=20
-#GET /posts/me?take=20&cursor=<nextCursor>
-#GET /posts/by-username/{username}?take=20
-#GET /posts/by-username/{username}?take=20&cursor=<nextCursor>
-#GET /posts/feed?take=20
-#GET /posts/feed?take=20&cursor=<nextCursor>
+#--#GET posts/{postId}/likes?take=20&cursor=<nextCursor>
+#--#GET posts/{postId}/comments?take=20
+#--#GET posts/{postId}/comments?take=20&cursor=<nextCursor>
+#--#GET posts/me?take=20
+#--#GET posts/me?take=20&cursor=<nextCursor>
+#--#GET posts/by-username/{username}?take=20
+#--#GET posts/by-username/{username}?take=20&cursor=<nextCursor>
+#--#GET posts/feed?take=20
+#--#GET posts/feed?take=20&cursor=<nextCursor>
 
 
 

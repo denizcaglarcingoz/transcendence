@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+
 using Transcendence.Application.Users.DTOs;
 using Transcendence.Application.Users.Services;
-using Microsoft.AspNetCore.Authorization;
 using Transcendence.Application.Common.Responses;
 using Transcendence.Api.Common.Extensions;
 using Transcendence.Application.Users.Interfaces;
