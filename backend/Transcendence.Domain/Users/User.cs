@@ -10,7 +10,7 @@ public sealed class User
     public string? Bio {get; private set; }
     public string? AvatarUrl {get; private set; }
 
-    public DateTime CreatedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value
     private User() { } // constructor for EF

@@ -3,6 +3,7 @@ using System.Security.Claims;
 
 namespace Transcendence.Api.Realtime.Hubs;
 public abstract class BaseHub<TClient>: Hub<TClient> {
+    
     private Guid GetUserIdOrThrow()
     {
         var id  = TryGetUserId();

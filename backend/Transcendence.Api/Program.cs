@@ -22,8 +22,7 @@ builder.Services.AddSignalR();
 builder.Services.AddApplication(); //my extention method
 
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddScoped<FollowService>();
-builder.Services.AddScoped<ProfileService>();
+
 builder.Services.AddControllers();
 /*
 	If a class:
@@ -33,7 +32,7 @@ builder.Services.AddControllers();
 
 	it is registered in DI
 */
-var app = builder.Build();
+var app = builder.Build();  //app IApplicationBuilder
 
 if (app.Environment.IsDevelopment())
 {
@@ -42,11 +41,19 @@ if (app.Environment.IsDevelopment())
 }
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseGlobalExceptionHandling();
 
 app.MapChatEndpoints();
 app.MapControllers();
 app.Run();
 
+  static int x(this int n)
+        {
+          return n * n;
+        } 
+
+   int j = 2;
+    j.x();  //4
 /*
 1. builder = WebApplication.CreateBuilder()
 2. builder.Services.AddXxx()        ← DependencyInjection

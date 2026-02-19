@@ -7,7 +7,7 @@ using Transcendence.Application.Chat.Services;
 
 namespace Transcendence.Api.Controllers;
 
-[ApiController]
+[ApiController] // automatically detects source of parameteres
 [Route("conversations")]
 public class ConversationsController : ControllerBase
 {
@@ -19,8 +19,8 @@ public class ConversationsController : ControllerBase
     [HttpGet("{conversationId}/messages")]
     public async Task<IActionResult> GetMessages(
         Guid conversationId,
-        [FromQuerry] int offset = 0,
-        [FromQuerry] int limit = 20)
+        [FromQuery] int offset = 0,
+        [FromQuery] int limit = 20)
     {
         var userId = GetUserId();
         var messages = await _chatService.GetMessagesAsync(userId, conversationId, offset, limit);

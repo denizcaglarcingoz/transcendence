@@ -4,6 +4,7 @@ using Transcendence.Application.Chat.Abstractions;
 using Transcendence.Application.Chat.DTOs;
 using Transcendence.Application.Chat.Interfaces;
 using Transcendence.Domain.Chat;
+using Transcendence.Domain.Exceptions;
 
 namespace Transcendence.Application.Chat.Services;
 
@@ -23,7 +24,7 @@ public class ChatService : IChatService
 
     }
 
-    public ChatMessageDto MapToDto(Message message)
+    private ChatMessageDto MapToDto(Message message)
     {
         return new ChatMessageDto {
             MessageId = message.Id,
@@ -39,8 +40,8 @@ public class ChatService : IChatService
     {
         var existing = await _messageRepository.GetByClientMessageIdAsync(senderId, clientMessageId);
 
-        if (existing is not null)
-            return MapToDto(existing);
+        if (existing is not null) //allready sent but not delievered
+            return MapToDto(existing); 
 
         if (string.IsNullOrWhiteSpace(content))
             throw new ValidationException("Message content is empty");
@@ -96,12 +97,12 @@ public class ChatService : IChatService
             .Select(MapToDto)
             .ToList();
     }
-    public async Task AssertUserIsParticipant(Guid conversationId, Guid UserUd) {
+    public async Task AssertUserIsParticipant(Guid conversationId, Guid UserId) {
         
         var conversation = await _coversationRepository.GetByIdAsync(conversationId) 
             ?? throw new NotFoundException("No such conversation");
         
-        if (!conversation.HasParticipant(userId))
+        if (!conversation.HasParticipant(UserId))
             throw new ForbiddenException("User is not a participant");
     }
 }

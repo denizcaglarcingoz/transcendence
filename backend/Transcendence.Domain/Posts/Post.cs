@@ -4,7 +4,7 @@ public sealed class Post //minimal, preliminary
 {
     public Guid Id {get; private set; }
     public Guid AuthorId {get; private set; }
-    public DateTime CreatedAt {get; private set; }
+    public DateTimeOffset CreatedAt {get; private set; }
     
     private Post () {}
 
@@ -12,6 +12,6 @@ public sealed class Post //minimal, preliminary
     {
         Id = id;
         AuthorId = authorId;
-        CreatedAt = DateTime.UtcNow;
+        CreatedAt = DateTimeOffset.UtcNow;
     }
 }
