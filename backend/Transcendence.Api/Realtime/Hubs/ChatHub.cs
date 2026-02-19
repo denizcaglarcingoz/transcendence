@@ -56,13 +56,13 @@ public sealed class ChatHub : BaseHub<IRealtimeClient>
     public async Task JoinConversation(Guid conversationId)
     {
         var userId = GetUserIdOrThrow();
-        _chatService.AssertUserIsParticipant(conversationId, UserUd);
-        await Group.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); //SignalR does all
+        await _chatService.AssertUserIsParticipant(conversationId, UserUd);
+        await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); //SignalR does all
     }
 
     public async Task LeaveConversation(Guid converationId)
     {
-        await Group.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); 
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); 
     }
 
     public async Task SendMessage(SendMessageCommandDto dto)

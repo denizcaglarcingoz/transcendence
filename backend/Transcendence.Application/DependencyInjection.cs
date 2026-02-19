@@ -15,11 +15,11 @@ using Transcendence.Application.Files.Service;
 using Transcendence.Application.Posts.Interfaces;
 using Transcendence.Application.Posts.Services;
 
-
 namespace Transcendence.Application;
 
 public static class DependencyInjection
 {
+
 	public static IServiceCollection AddApplication (this IServiceCollection services) // add my method to services
 	{
 		//Chats & Messages:
@@ -47,5 +47,6 @@ public static class DependencyInjection
 
 		return services;
 	}
+
 }
 
