@@ -6,7 +6,7 @@ public sealed class ConversationParticipant
 {
   public Guid UserId {get; private set;}
   public Guid ConversationId {get; private set;}
-  public DateTime JoinedAt {get; private set;}
+  public DateTimeOffset JoinedAt {get; private set;}
 
 
   private ConversationParticipant() {}
