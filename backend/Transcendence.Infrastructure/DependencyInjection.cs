@@ -6,6 +6,7 @@ using Transcendence.Application.UserFollows.Interfaces;
 using Transcendence.Application.Posts.Interfaces;
 using Transcendence.Infrastructure.Persistence;
 using Transcendence.Infrastructure.Repositories;
+using Transcendence.Application.Chat.Interfaces;
 
 namespace Transcendence.Infrastructure;
 
@@ -21,7 +22,9 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>(); // when IUserRepository needed - creates UserRepository
         services.AddScoped<IUserFollowRepository, UserFollowRepository>(); 
         services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
         services.AddScoped<IMessageRepository, MessageRepository>();
+
 
         return services;
     }

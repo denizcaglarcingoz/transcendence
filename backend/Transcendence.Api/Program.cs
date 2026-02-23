@@ -1,6 +1,5 @@
 using Transcendence.Application;
 using Transcendence.Infrastructure;
-using Transcendence.Api.Chat;
 using Microsoft.EntityFrameworkCore;
 using Transcendence.Application.Users.Interfaces;
 using Transcendence.Application.UserFollows.Interfaces;
@@ -8,7 +7,8 @@ using Transcendence.Application.Users.Services;
 using Transcendence.Infrastructure.Persistence;
 using Transcendence.Infrastructure.Repositories;
 using Transcendence.Application.Posts.Interfaces;
-
+using Transcendence.Api.Common.Extensions;
+using Transcendence.Api.Realtime;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer(); // scan endpoints for  OpenAPI
@@ -24,14 +24,7 @@ builder.Services.AddApplication(); //my extention method
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
-/*
-	If a class:
-	• has dependencies
-	• must live within a request
-	• is used through a constructor
 
-	it is registered in DI
-*/
 var app = builder.Build();  //app IApplicationBuilder
 
 if (app.Environment.IsDevelopment())
@@ -47,13 +40,15 @@ app.MapChatEndpoints();
 app.MapControllers();
 app.Run();
 
-  static int x(this int n)
-        {
-          return n * n;
-        } 
 
-   int j = 2;
-    j.x();  //4
+/*
+	If a class:
+	• has dependencies
+	• must live within a request
+	• is used through a constructor
+
+	it is registered in DI
+*/
 /*
 1. builder = WebApplication.CreateBuilder()
 2. builder.Services.AddXxx()        ← DependencyInjection
