@@ -12,6 +12,7 @@ public sealed class  MessageRepository : IMessageRepository
     }
     public async Task AddAsync(Message message)
     {
+        Console.WriteLine("Repo Add message conv = " + message.ConversationId);
         await _db.Messages.AddAsync(message);
     }
     public async Task <Message?> GetByClientMessageIdAsync(Guid senderId, Guid clientMessageId)
@@ -21,7 +22,7 @@ public sealed class  MessageRepository : IMessageRepository
                 && m.ClientMessageId == clientMessageId);
     }    
     public async Task <IReadOnlyList<Message>> GetByConversationIdAsync(
-        Guid conversationId, int limit, int offset
+        Guid conversationId, int offset, int limit
         )
     {
         return await _db.Messages

@@ -12,7 +12,7 @@ public class Message
     public  string Content {get; private set;} = null!;
 
     private Message () {} //EF
-    public Message (Guid conversationId,  Guid userId, Guid ClientMessageId, string content )
+    public Message (Guid conversationId,  Guid userId, Guid clientMessageId, string content )
     {
         if (string.IsNullOrWhiteSpace(content))
             throw  new InvalidArgumentException("Message content cannot be empty");
@@ -21,6 +21,7 @@ public class Message
         Content = content ;
         SenderId = userId;
         ConversationId =  conversationId;
+        ClientMessageId = clientMessageId;
         CreatedAt = DateTimeOffset.UtcNow;
     }
 }
