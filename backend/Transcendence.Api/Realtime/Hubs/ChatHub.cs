@@ -8,6 +8,7 @@ using Transcendence.Application.Chat.Abstractions;
 using Transcendence.Application.Chat.DTOs;
 using Transcendence.Application.Realtime.Contracts;
 using Transcendence.Api.Common.Extensions;
+using System.Text.Json;//
 namespace Transcendence.Api.Realtime.Hubs;
 
 public sealed class ChatHub : BaseHub<IRealtimeClient> 
@@ -21,7 +22,9 @@ public sealed class ChatHub : BaseHub<IRealtimeClient>
 
     public override async Task OnConnectedAsync()
     {
+        
         var userId = Context.User.GetUserId();
+
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.User(userId)); // add connId to user's collection of connections  
         var presence = new PresenceEventDto
         {
@@ -58,6 +61,7 @@ public sealed class ChatHub : BaseHub<IRealtimeClient>
     public async Task JoinConversation(Guid conversationId)
     {
         var userId = Context.User.GetUserId();
+        // Console.WriteLine("Hub userId = " + Context.User.GetUserId());
         await _chatService.AssertUserIsParticipant(conversationId, userId);
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); //SignalR does all
     }
@@ -67,30 +71,86 @@ public sealed class ChatHub : BaseHub<IRealtimeClient>
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); 
     }
 
-    public async Task SendMessage(SendMessageCommandDto dto)
+ 
+public async Task SendMessage(JsonElement payload)
+{
+    Console.WriteLine("RAW JSON = " + payload.GetRawText());
+
+    // пробуем достать поля как строки
+    if (!payload.TryGetProperty("ConversationId", out var convProp) &&
+        !payload.TryGetProperty("conversationId", out convProp))
     {
-        var senderId = Context.User.GetUserId();
-
-        var messageDto = await _chatService.SendMessageAsync(
-            senderId: senderId,
-            conversationId: dto.ConversationId,
-            clientMessageId: dto.ClientMessageId, 
-            content: dto.Content
-        );
-
-        await Clients.Group(GroupNames.Conversation(dto.ConversationId))
-                     .MessageReceived(messageDto); 
-         
-        await Clients.Caller.MessageAck(new MessageAckDto
-        {
-            ClientMessageId = dto.ClientMessageId,
-            MessageId = messageDto.MessageId, 
-            CreatedAt = messageDto.CreatedAt
-        });
+        throw new Exception("Missing ConversationId");
     }
 
+    if (!payload.TryGetProperty("ClientMessageId", out var clientProp) &&
+        !payload.TryGetProperty("clientMessageId", out clientProp))
+    {
+        throw new Exception("Missing ClientMessageId");
+    }
+
+    if (!payload.TryGetProperty("Content", out var contentProp) &&
+        !payload.TryGetProperty("content", out contentProp))
+    {
+        throw new Exception("Missing Content");
+    }
+
+    var conversationIdStr = convProp.GetString();
+    var clientMessageIdStr = clientProp.GetString();
+    var content = contentProp.GetString();
+
+    Console.WriteLine($"conversationIdStr=[{conversationIdStr}]");
+    Console.WriteLine($"clientMessageIdStr=[{clientMessageIdStr}]");
+    Console.WriteLine($"content=[{content}]");
+
+    if (!Guid.TryParse(conversationIdStr, out var conversationId))
+        throw new Exception("Bad ConversationId format");
+
+    if (!Guid.TryParse(clientMessageIdStr, out var clientMessageId))
+        throw new Exception("Bad ClientMessageId format");
+
+    var senderId = Context.User.GetUserId();
+
+    var messageDto = await _chatService.SendMessageAsync(
+        senderId,
+        conversationId,
+        clientMessageId,
+        content
+    );
+
+    await Clients.Group(GroupNames.Conversation(conversationId))
+        .MessageReceived(messageDto);
 }
+}
+//     public async Task SendMessage(SendMessageCommandDto dto)
+//     {
+//         var senderId = Context.User.GetUserId();
+
+//         var messageDto = await _chatService.SendMessageAsync(
+//             senderId,
+//             dto.ConversationId,
+//             dto.ClientMessageId,
+//             dto.Content
+//         );
+
+//         await Clients.Group(GroupNames.Conversation(dto.ConversationId))
+//                     .MessageReceived(messageDto);
+
+//         await Clients.Caller.MessageAck(new MessageAckDto
+//         {
+//             ClientMessageId = dto.ClientMessageId,
+//             MessageId = messageDto.MessageId,
+//             CreatedAt = messageDto.CreatedAt
+//         });
+//     }
+// }
 /*
+ChatHub — это transport layer.
+	•	принимает WebSocket-соединение
+	•	получает вызовы от клиента (SendMessage, JoinConversation)
+	•	добавляет connection в SignalR group
+	•	рассылает сообщения в group
+
 Client
   │ SendMessageCommandDto
   ▼
@@ -104,7 +164,7 @@ ChatService
   ▼
 Message (Domain)
   │
-  │ saved
+  │ save
   ▼
 Database
   │

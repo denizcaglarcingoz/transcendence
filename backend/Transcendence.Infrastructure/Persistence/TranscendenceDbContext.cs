@@ -64,6 +64,15 @@ public class TranscendenceDbContext: DbContext
      {
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(TranscendenceDbContext).Assembly);
+     
+     // Applies all entity configurations from the current assembly.
+     // EF Core finds every class implementing IEntityTypeConfiguration<T>
+     // and executes their Configure() method during model creation.
+     
      }
 }
+<<<<<<< HEAD
 >>>>>>> 5178767 (chat main things)
+=======
+ 
+>>>>>>> d4e8a3e (raw chat)

@@ -27,20 +27,19 @@ public class ConversationsController : ControllerBase
         [FromQuery] int offset = 0,
         [FromQuery] int limit = 20)
     {
-        var userId = User.GetUserId(); //  User (ClaimsPrincipal) is always available in the controller
+        var userId = User.GetUserId();
+        Console.WriteLine($"userID wants to read meassages {userId}");
+         //  User (ClaimsPrincipal) is always available in the controller
         var messages = await _chatService.GetMessagesAsync(userId, conversationId, offset, limit);
         return this.OkResponse(messages);
     }
-    // IReadOnlyList<T> represents a read-only collection.
-// It allows consumers to read and iterate over items,
-// but prevents modification of the collection.
-// Used in APIs to express intent: the data is a result, not a working collection.
+    // IReadOnlyList<T> Used in APIs to express intent: the data is a result, not a working collection.
 
      [HttpPost("direct")]
      public async Task<ActionResult<ApiResponse<Guid>>> CreateDirectConversation(
             [FromBody] CreateDirectConversationDto dto)
     {   
-        var userId = User.GetUserId();
+        var userId = User.GetUserId(); //temp
         var conversationId = await _chatService
             .CreateOrGetDirectConversationAsync(userId, dto.TargetUserId);
         return this.OkResponse(conversationId);

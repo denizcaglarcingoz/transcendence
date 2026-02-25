@@ -1,98 +1,104 @@
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-// using Transcendence.Api.Chat;
+
 using Transcendence.Api.Configurations;
+using Transcendence.Api.Realtime;
+using Transcendence.Api.Common.Middleware;
+
 using Transcendence.Application;
 using Transcendence.Application.Auth.DTOs;
-using Transcendence.Application.Friends.Interfaces;
-using Transcendence.Application.Friends.Services;
-using Transcendence.Application.Posts.Interfaces;
+
 using Transcendence.Infrastructure;
-using Transcendence.Infrastructure.Persistence;
-using Transcendence.Infrastructure.Repositories;
 
-using Transcendence.Api.Realtime;
-
+// =========================
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEndpointsApiExplorer(); // scan endpoints for  OpenAPI
+
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerDocumentation();
 
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("Frontend", policy =>
-		policy.WithOrigins("http://localhost:5173")
-			  .AllowAnyHeader()
-			  .AllowAnyMethod()
-	// Use AllowCredentials() only if we use cookies.
-	// .AllowCredentials() ???????????????
-	);
+    options.AddPolicy("DevCors", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var key = jwtSection["Key"]!;
 
-
 builder.Services
-	.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-	.AddJwtBearer(options =>
-	{
-		options.TokenValidationParameters = new TokenValidationParameters
-		{
-			ValidateIssuerSigningKey = true,
-			IssuerSigningKey = new SymmetricSecurityKey(
-				Encoding.UTF8.GetBytes(key)),
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(key)),
 
-			ValidateIssuer = true,
-			ValidIssuer = jwtSection["Issuer"],
+            ValidateIssuer = true,
+            ValidIssuer = jwtSection["Issuer"],
 
-			ValidateAudience = true,
-			ValidAudience = jwtSection["Audience"],
+            ValidateAudience = true,
+            ValidAudience = jwtSection["Audience"],
 
-			ValidateLifetime = true,
-			ClockSkew = TimeSpan.Zero
-		};
-	});
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
 
 builder.Services.Configure<GoogleAuthOptions>(
-	builder.Configuration.GetSection("GoogleAuth"));
+    builder.Configuration.GetSection("GoogleAuth"));
 
 
-builder.Services.AddSwaggerDocumentation();
 builder.Services.AddAuthorization();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
 
-builder.Services.AddSignalR();
-
-builder.Services.AddApplication(); //my extention method
-
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
 builder.Services.AddControllers();
 
 
-var app = builder.Build();
-app.UseRouting();
-app.UseCors("Frontend");
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
+
+var app = builder.Build();
+
+app.UseStaticFiles();
+
+app.UseRouting();
+app.UseCors("DevCors");
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.UseMiddleware<DevAuthMiddleware>();
 }
+
 app.UseAuthentication();
 app.UseAuthorization();
-// app.UseGlobalExceptionHandling();
+
 
 app.MapChatEndpoints();
 app.MapControllers();
-app.Run();
 
+app.Run();
 /*
 1. builder = WebApplication.CreateBuilder()
 2. builder.Services.AddXxx()        ← DependencyInjection

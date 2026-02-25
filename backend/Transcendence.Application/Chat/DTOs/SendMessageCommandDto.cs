@@ -2,9 +2,9 @@ namespace Transcendence.Application.Chat.DTOs;
 
 public sealed class SendMessageCommandDto
 {
-    public Guid ConversationId { get; init; }
-    public Guid ClientMessageId { get; init; }
-    public string Content { get; init; } = default!;
+    public Guid ConversationId { get; set; }
+    public Guid ClientMessageId { get; set; }
+    public string Content { get; set; } = default!;
 }
 /*
 
