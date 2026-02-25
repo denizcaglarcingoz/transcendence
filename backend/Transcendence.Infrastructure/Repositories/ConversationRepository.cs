@@ -15,7 +15,9 @@ public sealed class ConversationRepository : IConversationRepository
 
     public async Task<Conversation?> GetByIdAsync(Guid id)
     {
-        return await _db.Conversations.SingleOrDefaultAsync(c => c.Id == id); // return 0 = null, 1 = object, 1 > = exception 
+        return await _db.Conversations
+                    .Include(c => c.Participants)
+                    .SingleOrDefaultAsync(c => c.Id == id); // return 0 = null, 1 = object, 1 > = exception 
     }
     public async Task <Conversation?> GetDirectConversation(Guid userA, Guid userB)
     {
@@ -23,10 +25,13 @@ public sealed class ConversationRepository : IConversationRepository
             .Where(c => c.Type == ConversationType.Direct)
             .Where(c => c.Participants.Any(p => p.UserId == userA) && c.Participants.Any(p=> p.UserId == userB))
             .SingleOrDefaultAsync();
+
     }
     public async Task AddAsync(Conversation conversation)
     {
         await _db.Conversations.AddAsync(conversation);
+
+
     }
     public async Task SaveChangesAsync()
     {

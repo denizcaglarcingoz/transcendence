@@ -3,34 +3,7 @@ using System.Security.Claims;
 
 namespace Transcendence.Api.Realtime.Hubs;
 public abstract class BaseHub<TClient>: Hub<TClient> where TClient : class {
-    /*
-    protected Guid GetUserIdOrThrow()
-    {
-        var id  = TryGetUserId();
-        if (id is null)
-            throw new HubException("Unauthorized");
-            return id.Value; /////////
-    }
 
-    protected Guid? TryGetUserId()
-    {
-        // fin: claim "sub" or NameIdentifier
-        var claim =
-            Context.User?.FindFirst("sub")?.Value ??
-            Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (Guid.TryParse(claim, out var userId))
-            return userId;
-
-        // temp:
-        var http = Context.GetHttpContext();
-        var debug = http?.Request.Query["debugUserId"].ToString();
-        if (Guid.TryParse(debug, out userId))
-            return userId;
-
-        return null;
-    }
-    */
 
 }
 

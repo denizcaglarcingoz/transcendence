@@ -9,6 +9,7 @@ using Transcendence.Infrastructure.Repositories;
 using Transcendence.Application.Posts.Interfaces;
 using Transcendence.Api.Common.Extensions;
 using Transcendence.Api.Realtime;
+using  Transcendence.Api.Common.Middelware;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer(); // scan endpoints for  OpenAPI
@@ -17,21 +18,42 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
 
 builder.Services.AddApplication(); //my extention method
 
 builder.Services.AddInfrastructure(builder.Configuration);
-
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevCors", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5500") // если запускаешь через локальный сервер
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+    		.SetIsOriginAllowed(_ => true)
+            .AllowCredentials();
+    });
+});
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 var app = builder.Build();  //app IApplicationBuilder
+
+app.UseStaticFiles(); // темп
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+	app.UseCors("DevCors");
+	app.UseMiddleware<DevAuthMiddleware>();
 }
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseGlobalExceptionHandling();

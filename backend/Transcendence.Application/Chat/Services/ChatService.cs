@@ -41,6 +41,7 @@ public class ChatService : IChatService
         Guid senderId, Guid conversationId, Guid clientMessageId, string? content
         )
     {
+
         var existing = await _messageRepository.GetByClientMessageIdAsync(senderId, clientMessageId);
 
         if (existing is not null) //allready sent but not delievered
@@ -52,13 +53,16 @@ public class ChatService : IChatService
         var conversation = await _coversationRepository.GetByIdAsync(conversationId) 
             ?? throw new NotFoundException("No such conversation");
 
+        Console.WriteLine("HasParticipant check...");
+Console.WriteLine("Participants count: " + conversation.Participants.Count);
         if (!conversation.HasParticipant(senderId))
             throw new ForbiddenException("User is not a participant");
 
         var message = new Message(conversationId, senderId, clientMessageId, content);
+        Console.WriteLine("Saved message id = " + message.Id);
 
         await _messageRepository.AddAsync(message);
-        // await _unitOfWork.SaveChangesAsync();
+        await _coversationRepository.SaveChangesAsync();
         return MapToDto(message);
     }
 
@@ -75,7 +79,7 @@ public class ChatService : IChatService
         var conversation = new Conversation(type: ConversationType.Direct, new[] { userA, userB});
         
         await _coversationRepository.AddAsync(conversation);
-        // await _unitOfWork.SaveChangesAsync();
+        await _coversationRepository.SaveChangesAsync();
 
         return conversation.Id;
     }
@@ -95,6 +99,9 @@ public class ChatService : IChatService
             throw new ForbiddenException("User is not a participant");
 
         var messages = await _messageRepository.GetByConversationIdAsync(conversationId, offset, limit);
+
+        var temp = MapToDto(messages[0]);
+        Console.WriteLine($" try9ing ConvId: {temp.ConversationId}, meassageId: {temp.MessageId}, {temp.Content}");
         
         return messages
             .Select(MapToDto)
@@ -104,7 +111,7 @@ public class ChatService : IChatService
         
         var conversation = await _coversationRepository.GetByIdAsync(conversationId) 
             ?? throw new NotFoundException("No such conversation");
-        
+        Console.WriteLine("Participants count: " + conversation.Participants.Count);
         if (!conversation.HasParticipant(UserId))
             throw new ForbiddenException("User is not a participant");
     }
