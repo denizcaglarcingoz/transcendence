@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+
 using Transcendence.Application.Users.DTOs;
 using Transcendence.Application.Users.Services;
-using Microsoft.AspNetCore.Authorization;
 using Transcendence.Application.Common.Responses;
 using Transcendence.Api.Common.Extensions;
 using Transcendence.Application.Users.Interfaces;
@@ -20,37 +21,45 @@ public sealed class ProfileController : ControllerBase
 
 	//GET /profile/me
 	[HttpGet("me")]
-    public async Task<ActionResult<ApiResponse<MyProfileDto>>> GetMyProfile()
+    public async Task<ActionResult<ApiResponse<MyProfileDto>>> GetMyProfile(CancellationToken ct)
     {
         Guid userId = GetUserId(); //todo auth
 
-        var profile = await _profileService.GetMyProfileAsync(userId);
+        var profile = await _profileService.GetMyProfileAsync(userId, ct);
         return this.OkResponse(profile);
-    }
-
-
-	// PATCH /profile/me
-	[HttpPatch("me")]
-    public async Task<ActionResult<ApiResponse<MyProfileDto>>> UpdateProfile( // interface type while method can return different HTTP statuses but has no main type (ex:dto)
-        [FromBody] UpdateProfileDto dto) // parse from request to dto
-    {
-        Guid userId = GetUserId(); //todo auth
-
-        var updatedProfile = await _profileService.UpdateProfileAsync(userId, dto);
-
-        return this.OkResponse(updatedProfile);
     }
 
 	//GET /profile/{userId}
 	[HttpGet("{userId:guid}")]
-    public async Task<ActionResult<ApiResponse<OtherProfileDto>>> GetOtherProfile(Guid userId)
+	public async Task<ActionResult<ApiResponse<OtherProfileDto>>> GetOtherProfile(Guid userId, CancellationToken ct)
+	{
+		Guid viewerId = GetUserId(); //todo auth
+
+		var otherProfile = await _profileService.GetOtherProfileAsync(userId, viewerId, ct);
+		return this.OkResponse(otherProfile);
+
+	}
+
+	// PATCH /profile/me
+	[HttpPatch("me")]
+    public async Task<ActionResult<ApiResponse<MyProfileDto>>> UpdateProfile( // interface type while method can return different HTTP statuses but has no main type (ex:dto)
+        [FromBody] UpdateProfileDto dto, CancellationToken ct) // parse from request to dto
     {
-        Guid viewerId = GetUserId(); //todo auth
+        Guid userId = GetUserId(); //todo auth
 
-        var otherProfile = await _profileService.GetOtherProfileAsync(userId, viewerId);
-        return this.OkResponse(otherProfile);
+        var updatedProfile = await _profileService.UpdateProfileAsync(userId, dto, ct);
 
+        return this.OkResponse(updatedProfile);
     }
+
+	// PATCH /profile/password
+    [HttpPatch("password")]
+    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordDto dto, CancellationToken ct)
+    {
+        Guid userId = GetUserId(); //todo auth
+        await _profileService.ChangePasswordAsync(userId, dto, ct);
+        return NoContent(); // 204 No Content
+	}
 
 	private Guid GetUserId()
 	{
@@ -64,17 +73,4 @@ public sealed class ProfileController : ControllerBase
 		return userId;
 	}
 }
-/*
-
-    ! Сервисы и репозитории НЕ хранят состояние.
-    ! Всё состояние — либо в Domain, либо в БД.
-
-    Короткий итог (зафиксируй)
-
-    ✔ Да, сервис создаётся на каждый запрос
-    ✔ Да, репозитории тоже
-    ✔ Да, DbContext тоже
-    ✔ Это осознанный дизайн
-    ✔ Это безопасно
-    ✔ Это масштабируемо 
-*/
+/

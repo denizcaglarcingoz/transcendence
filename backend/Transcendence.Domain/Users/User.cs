@@ -4,15 +4,21 @@ public sealed class User
 {
 	public Guid Id { get; private set; }
 	public string Username { get; private set; } = default!;
+	public string PasswordHash { get; private set; } = default!;
 	public string Email { get; private set; } = default!;
 	public string FullName { get; private set; } = default!;
 	public string? Bio { get; private set; }
-	public string? AvatarUrl { get; private set; }
+	public Guid? AvatarFileId { get; private set; }
 	public DateTime CreatedAt { get; private set; }
 
 #pragma warning disable CS8618
 	private User() { }
 #pragma warning restore CS8618
+
+	public void SetPasswordHash(string passwordHash)
+	{
+		PasswordHash = passwordHash;
+	}
 
 	public User(Guid id, string username, string email, string fullName, DateTime createdAt)
 	{
@@ -29,9 +35,9 @@ public sealed class User
 		if (username != null) SetUsername(username);
 	}
 
-	public void UpdateAvatar(string? avatarUrl)
+	public void UpdateAvatar(Guid? avatarUrl)
 	{
-		AvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl.Trim();
+		AvatarFileId = avatarUrl;
 	}
 
 	public void UpdateBio(string? bio)
