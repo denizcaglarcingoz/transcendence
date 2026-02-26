@@ -13,47 +13,52 @@ servers:
 
 paths:
 #authentication
-#POST auth/login
-#POST auth/register
-#POST auth/google
-#POST auth/logout
-#POST auth/2fa/enable
-#POST auth/2fa/verify
-#POST auth/2fa/disable
-#POST auth/2fa/generate
+#POST /auth/login
+#POST /auth/register
+#POST /auth/google
+#POST /auth/logout
+#POST /auth/2fa/enable
+#POST /auth/2fa/verify
+#POST /auth/2fa/disable
+#POST /auth/2fa/generate
 
 #users
-#GET profile/me
-#GET profile/{userId}
-#PATCH profile/me
-#PATCH profile/me/password
-#POST profile/me/avatar
-#DELETE me
+#+--#GET /profile/me
+#+--#GET /profile/{userId}
+#+--#PATCH /profile/me
+#+--#PATCH /profile/password
+#+--#DELETE /me
 
 ##friends
-#+--#GET friends/list
-#+--#POST friends/{username}
-#+--#DELETE friends/{username}
-#+--#GET friends/requests
-#+--#POST friends/requests/{requestId}/accept
-#+--#POST friends/requests/{requestId}/decline
+#+--#GET /friends/list
+#+--#POST /friends/{username}
+#+--#DELETE /friends/{username}
+#+--#GET /friends/requests
+#+--#POST /friends/requests/{requestId}/accept
+#+--#POST /friends/requests/{requestId}/decline
 
-#post
-#GET post/{postId}
-#POST post
-#DELETE post/{postId}
-#POST post/{postId}/like
-#GET post/{postId}/likes
-#POST post/{postId}/comment
-#DELETE post/{postId}/comment/{commentId}
+#file upload
+#+--GET /files/{fileId}
+#+--POST /files
+#+--DELETE /files/{fileId}
 
-#posts/feed
-#GET /posts/me?take=20
-#GET /posts/me?take=20&cursor=<nextCursor>
-#GET /posts/by-username/{username}?take=20
-#GET /posts/by-username/{username}?take=20&cursor=<nextCursor>
-#GET /posts/feed?take=20
-#GET /posts/feed?take=20&cursor=<nextCursor>
+#posts
+#+-#GET /posts/{postId}
+#+-#POST /posts
+#+-#DELETE /posts/{postId}
+
+#+-#POST /posts/{postId}/likes
+#+-#DELETE /posts/{postId}/likes
+
+#+-#POST /posts/{postId}/comments
+#+-#DELETE /posts/{postId}/comments/{commentId}
+
+#--#GET /posts/{postId}/likes?take=20&cursor=<nextCursor>
+#--#GET /posts/{postId}/comments?take=20&cursor=<nextCursor>
+#--#GET /posts/me?take=20&cursor=<nextCursor>
+#--#GET /posts/by-username/{username}?take=20&cursor=<nextCursor>
+#--#GET /posts/feed?take=20&cursor=<nextCursor>
+
 
 #notifications
 #GET notifications/list
@@ -62,12 +67,13 @@ paths:
 #GET chat/conversations
 #GET chat/{userId}/messages
 
+
+#This is a maybe feature
 #admin (Protected: Admins only)
 #GET admin/users
 #PATCH admin/users/{id}/role
 #POST admin/users/{id}/ban
 #DELETE admin/users/{id}/ban
-
 
 #API:
 #Controller

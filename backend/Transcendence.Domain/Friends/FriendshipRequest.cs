@@ -1,13 +1,16 @@
 using Transcendence.Domain.Exceptions;
 namespace Transcendence.Domain.Friends;
-public sealed class FriendshipRequest
+public sealed class FriendshipshipRequest
 {
 	public Guid Id { get; private set; }
 	public Guid RequesterId { get; private set; }
 	public Guid TargetUserId { get; private set; }
 	public DateTime CreatedAt { get; private set; }
 
+#pragma warning disable CS8618
 	private FriendshipRequest() { }
+#pragma warning disable CS8618
+
 
 	public FriendshipRequest(Guid id, Guid requesterId, Guid targetUserId, DateTime createdAt)
 	{

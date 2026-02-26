@@ -23,10 +23,10 @@ public sealed class FriendsController : ControllerBase
 
 	//GET /friends/list
 	[HttpGet("list")]
-	public async Task<ActionResult<ApiResponse<IReadOnlyList<FriendDto>>>> GetFriendsList()
+	public async Task<ActionResult<ApiResponse<IReadOnlyList<FriendDto>>>> GetFriendsList(CancellationToken ct)
 	{
 		Guid userId = GetUserId(); //todo auth
-		var friendsList = await _friendsService.GetFriendsListAsync(userId);
+		var friendsList = await _friendsService.GetFriendsListAsync(userId, ct);
 		return this.OkResponse(friendsList);
 	}
 
@@ -35,16 +35,16 @@ public sealed class FriendsController : ControllerBase
 	public async Task<IActionResult> SendFriendshipRequest(Guid targetUserId)
 	{
 		Guid requesterId = GetUserId();
-		await _friendsService.SendFriendshipRequestAsync(requesterId, targetUserId);
+		await _friendsService.SendFriendRequestAsync(requesterId, targetUserId, ct);
 		return StatusCode(StatusCodes.Status201Created); // 201, no body, no Location
 	}
 
 	//DELETE /friends/{friendUserId}
 	[HttpDelete("{friendUserId:guid}")]
-	public async Task<ActionResult> RemoveFriend(Guid friendUserId)
+	public async Task<ActionResult> RemoveFriend(Guid friendUserId, CancellationToken ct)
 	{
 		Guid userId = GetUserId(); //todo auth
-		await _friendsService.RemoveFriendAsync(userId, friendUserId);
+		await _friendsService.RemoveFriendAsync(userId, friendUserId, ct);
 		return NoContent(); // 204
 	}
 
@@ -87,17 +87,3 @@ public sealed class FriendsController : ControllerBase
 		return userId;
 	}
 }
-/*
-
-    ! Сервисы и репозитории НЕ хранят состояние.
-    ! Всё состояние — либо в Domain, либо в БД.
-
-    Короткий итог (зафиксируй)
-
-    ✔ Да, сервис создаётся на каждый запрос
-    ✔ Да, репозитории тоже
-    ✔ Да, DbContext тоже
-    ✔ Это осознанный дизайн
-    ✔ Это безопасно
-    ✔ Это масштабируемо 
-*/
