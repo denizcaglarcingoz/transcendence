@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Transcendence.Domain.UserFollows;
+using Transcendence.Domain.Friends;
 using Transcendence.Domain.Users;
 using Transcendence.Domain.Posts;
 
@@ -11,7 +11,7 @@ public class TranscendenceDbContext: DbContext
      public TranscendenceDbContext( 
           DbContextOptions<TranscendenceDbContext> options) : base (options){}
      public DbSet<User> Users => Set<User>();
-     public DbSet<Friends> UserFollows => Set<Friends>();
+     public DbSet<Friendship> UserFollows => Set<Friendship>();
      public DbSet<Post> Posts => Set<Post>();
 
 
