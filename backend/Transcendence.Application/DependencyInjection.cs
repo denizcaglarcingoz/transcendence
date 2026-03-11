@@ -4,7 +4,9 @@ using Transcendence.Application.Chat.Abstractions;
 using Transcendence.Application.Chat.Services;
 using Transcendence.Application.Messages.Abstractions;
 using Transcendence.Application.Messages.Services;
+using Transcendence.Application.Realtime.Contracts;
 using Transcendence.Application.Users.Services;
+<<<<<<< HEAD
 using Transcendence.Application.Users.Interfaces;
 using Transcendence.Application.Friends.Interfaces;
 using Transcendence.Application.Friends.Services;
@@ -14,11 +16,15 @@ using Transcendence.Application.Files.Interface;
 using Transcendence.Application.Files.Service;
 using Transcendence.Application.Posts.Interfaces;
 using Transcendence.Application.Posts.Services;
+=======
+using Transcendence.Application.Services;
+>>>>>>> 8fcdb03 (presence added)
 
 namespace Transcendence.Application;
 
 public static class DependencyInjection
 {
+<<<<<<< HEAD
 
 	public static IServiceCollection AddApplication (this IServiceCollection services) // add my method to services
 	{
@@ -48,5 +54,18 @@ public static class DependencyInjection
 		return services;
 	}
 
+=======
+    public static IServiceCollection AddApplication (this IServiceCollection services) // adds services from the Application layer to the DI container
+    {
+        //my services:
+        services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IMessageService, MessageService>();         
+        services.AddScoped<FollowService>();
+        services.AddScoped<ProfileService>();
+        services.AddScoped<IPresenceService, PresenceService>();         
+
+        return services;    
+    }
+>>>>>>> 8fcdb03 (presence added)
 }
 

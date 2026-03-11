@@ -8,4 +8,6 @@ public interface IConversationRepository
     Task <Conversation?> GetDirectConversation(Guid userA, Guid userB);
     Task AddAsync(Conversation Async);
     Task SaveChangesAsync();
+    Task <IReadOnlyList <Guid>> GetUserConversationsIds(Guid userId);
+    Task <IReadOnlyList<Guid>>  GetParticipantsIds(Guid conversationId);
 } 

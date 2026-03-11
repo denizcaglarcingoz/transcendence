@@ -1,4 +1,4 @@
-namespace Transcendence.Application.Chat.DTOs;
+namespace Transcendence.Application.Realtime.DTOs;
 
 public sealed class PresenceEventDto
 {

@@ -1,4 +1,6 @@
+using Transcendence.Application.Realtime.DTOs;
 using Transcendence.Application.Chat.DTOs;
+
 namespace Transcendence.Application.Realtime.Contracts;
 public interface IRealtimeClient
 {

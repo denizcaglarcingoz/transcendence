@@ -93,7 +93,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    app.UseMiddleware<DevAuthMiddleware>();
 }
 
 app.UseAuthentication();
