@@ -17,7 +17,7 @@ public interface IChatService
         Guid userId, Guid conversationId, int offset, int limit
     );
     Task AssertUserIsParticipant(Guid conversationId, Guid UserId);
-
+    Task <IReadOnlyList<Guid>>  GetUserConversationsIds(Guid userId);
 };
 
 /*
