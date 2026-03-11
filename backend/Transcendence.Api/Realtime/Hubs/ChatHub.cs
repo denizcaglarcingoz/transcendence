@@ -6,34 +6,63 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.VisualBasic;
 using Transcendence.Application.Chat.Abstractions;
 using Transcendence.Application.Chat.DTOs;
+using Transcendence.Application.Realtime.DTOs;
 using Transcendence.Application.Realtime.Contracts;
+using Transcendence.Application.Services;
 using Transcendence.Api.Common.Extensions;
+using  Transcendence.Api.Realtime.Hubs;
 using System.Text.Json;//
 namespace Transcendence.Api.Realtime.Hubs;
 
 public sealed class ChatHub : BaseHub<IRealtimeClient> 
 {
     private readonly IChatService _chatService;
+    private readonly IPresenceService _presenceService;
 
-    public ChatHub( IChatService chatService)
+
+    public ChatHub( IChatService chatService, IPresenceService presenceService )
     {
         _chatService = chatService;
+        _presenceService = presenceService;
+
     }
 
-    public override async Task OnConnectedAsync()
+    public override async Task OnConnectedAsync() // зашел на сайт
     {
-        
         var userId = Context.User.GetUserId();
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.User(userId)); // add connId to user's collection of connections  
-        var presence = new PresenceEventDto
-        {
-            UserId = userId,
-            IsOnline = true,
-            ChangedAt = DateTimeOffset.UtcNow
-        };
-            await Clients.All.UserOnLine(presence);
+        
+        var userConversations = await _chatService.GetUserConversationsIds(userId);
 
+
+        foreach (var c in userConversations)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId,
+                GroupNames.Conversation(c)); 
+        }
+
+
+        if (_presenceService.AddConnection(userId, Context.ConnectionId)) //became online
+        {
+            var presence = new PresenceEventDto
+            {
+                UserId = userId,
+                IsOnline = true,
+                ChangedAt = DateTimeOffset.UtcNow
+            };
+            // await Clients.Group(GroupNames.User(userId)) // hisself connections
+            //              .UserOnLine(presence); // calling method on user's client sides
+            
+            foreach(var c in userConversations)
+                await Clients.Group(GroupNames.Conversation(c)).UserOnLine(presence);
+            /*  same faster:
+                var tasks = userConversations
+                            .Select(c => Clients.Group(GroupNames.Conversation(c)).UserOnline(presence));
+                await Task.WhenAll(tasks);
+            */
+           
+        }
         await base.OnConnectedAsync();
     }
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -43,17 +72,34 @@ public sealed class ChatHub : BaseHub<IRealtimeClient>
         if (userId is not null)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.User(userId.Value)); 
-
-            var presence = new PresenceEventDto
+            if (_presenceService.RemoveConnection(userId.Value, Context.ConnectionId))
             {
-                UserId = userId.Value,
-                IsOnline = false,
-                ChangedAt = DateTimeOffset.UtcNow
-            };
+                var presence = new PresenceEventDto
+                {
+                    UserId = userId.Value,
+                    IsOnline = false,
+                    ChangedAt = DateTimeOffset.UtcNow
+                };
+                var userConversations = await _chatService.GetUserConversationsIds(userId.Value);//??!!!
+                foreach(var c in userConversations)
+                    await Clients.Group(GroupNames.Conversation(c)).UserOffLine(presence);
+            }
 
-            await Clients.All.UserOffLine(presence);
         }
         await base.OnDisconnectedAsync(exception);
+    
+    /*
+        Почему не бросают throw здесь
+        OnDisconnectedAsync — это notification, а не операция
+        соединение уже мертво. ничего “починить” нельзя.
+        throw ничего не изменит
+
+        Поэтому: exception передаётся (для логирования
+            для аналитики нестабильных клиентов
+            для отладки reconnect’ов
+            НЕ для бизнес-логики
+        )но не пробрасывается
+    */
 
         //OnDisconnectedAsync is a lifecycle hook provided by SignalR. It is invoked by the framework when a client connection is terminated. We override it to execute domain-specific cleanup logic, while still calling the base implementation to allow SignalR to perform its internal resource cleanup. At this point, the HTTP request is already completed, but the authenticated user’s ClaimsPrincipal is still available via the Hub context.
     }
@@ -61,8 +107,7 @@ public sealed class ChatHub : BaseHub<IRealtimeClient>
     public async Task JoinConversation(Guid conversationId)
     {
         var userId = Context.User.GetUserId();
-        // Console.WriteLine("Hub userId = " + Context.User.GetUserId());
-        await _chatService.AssertUserIsParticipant(conversationId, userId);
+        await _chatService.AssertUserIsParticipant(conversationId, userId); 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); //SignalR does all
     }
 
@@ -94,6 +139,25 @@ public sealed class ChatHub : BaseHub<IRealtimeClient>
     }
 }
 /*
+
+Browser
+   │
+   ▼
+SignalR connection
+   │
+   ▼
+ChatHub
+   │
+   ├── PresenceService
+   │       user → connections
+   │
+   ├── ChatService
+   │       conversations (DB)
+   │
+   └── SignalR Groups
+           user groups
+           conversation groups
+
 ChatHub — это transport layer.
 	•	принимает WebSocket-соединение
 	•	получает вызовы от клиента (SendMessage, JoinConversation)

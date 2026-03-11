@@ -3,9 +3,9 @@ namespace Transcendence.Domain.Chat;
 
 public sealed class Conversation
 {
-    public readonly List<ConversationParticipant> _participants = new(); //new() creates empty List during creating object
+    private readonly List<ConversationParticipant> _participants = new(); //new() creates empty List during creating object
 
-    public IReadOnlyCollection<ConversationParticipant>  Participants => _participants.AsReadOnly();
+    public IReadOnlyCollection<ConversationParticipant>  Participants => _participants; //?
     public Guid Id {get; private set; }
 
     public ConversationType Type {get; private set; }

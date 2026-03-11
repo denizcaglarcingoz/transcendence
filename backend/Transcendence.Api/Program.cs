@@ -10,6 +10,8 @@ using Transcendence.Application.Posts.Interfaces;
 using Transcendence.Api.Common.Extensions;
 using Transcendence.Api.Realtime;
 using  Transcendence.Api.Common.Middelware;
+using Transcendence.Application.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer(); // scan endpoints for  OpenAPI

@@ -5,7 +5,7 @@ using Transcendence.Application.Chat.DTOs;
 using Transcendence.Application.Chat.Interfaces;
 using Transcendence.Domain.Chat;
 using Transcendence.Domain.Exceptions;
-
+using Transcendence.Domain.Users;
 namespace Transcendence.Application.Chat.Services;
 
 public class ChatService : IChatService
@@ -43,7 +43,7 @@ public class ChatService : IChatService
     {
 
         var existing = await _messageRepository.GetByClientMessageIdAsync(senderId, clientMessageId);
-
+        // we have separate client's messeae Id for Idempotency
         if (existing is not null) //allready sent but not delievered
             return MapToDto(existing); 
 
@@ -53,13 +53,10 @@ public class ChatService : IChatService
         var conversation = await _coversationRepository.GetByIdAsync(conversationId) 
             ?? throw new NotFoundException("No such conversation");
 
-        Console.WriteLine("HasParticipant check...");
-Console.WriteLine("Participants count: " + conversation.Participants.Count);
         if (!conversation.HasParticipant(senderId))
             throw new ForbiddenException("User is not a participant");
 
         var message = new Message(conversationId, senderId, clientMessageId, content);
-        Console.WriteLine("Saved message id = " + message.Id);
 
         await _messageRepository.AddAsync(message);
         await _coversationRepository.SaveChangesAsync();
@@ -107,14 +104,19 @@ Console.WriteLine("Participants count: " + conversation.Participants.Count);
             .Select(MapToDto)
             .ToList();
     }
-    public async Task AssertUserIsParticipant(Guid conversationId, Guid UserId) {
+    public async Task AssertUserIsParticipant(Guid conversationId, Guid UserId) {//? GetUserConversations?
         
         var conversation = await _coversationRepository.GetByIdAsync(conversationId) 
             ?? throw new NotFoundException("No such conversation");
-        Console.WriteLine("Participants count: " + conversation.Participants.Count);
+
         if (!conversation.HasParticipant(UserId))
             throw new ForbiddenException("User is not a participant");
     }
+    public async Task <IReadOnlyList<Guid>>  GetUserConversationsIds(Guid userId)
+    {
+        return await _coversationRepository.GetUserConversationsIds(userId);
+    }
+
 }
  
  /*
