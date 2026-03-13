@@ -10,8 +10,8 @@ using Transcendence.Application.Posts.Interfaces;
 using Transcendence.Api.Common.Extensions;
 using Transcendence.Api.Realtime;
 using  Transcendence.Api.Common.Middelware;
-using Transcendence.Application.Services;
-
+using Transcendence.Application.Realtime.Contracts;
+using Transcendence.Api.Realtime.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer(); // scan endpoints for  OpenAPI
@@ -25,8 +25,11 @@ builder.Services.AddSignalR()
     {
         o.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
     });
+builder.Logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
+
 
 builder.Services.AddApplication(); //my extention method
+builder.Services.AddScoped<INotificationService, NotificationService>(); 
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers();
@@ -60,7 +63,6 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseGlobalExceptionHandling();
-
 app.MapChatEndpoints();
 app.MapControllers();
 app.Run();
