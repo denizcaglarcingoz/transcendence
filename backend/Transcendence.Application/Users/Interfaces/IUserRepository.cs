@@ -4,7 +4,7 @@ public interface IUserRepository
 {
     Task<User?> GetByIdAsync(Guid id, CancellationToken ct);
     Task<User?> GetByUsernameAsync(string username, CancellationToken ct);
-	Task<Guid> GetUserIdByAvatarFileIdAsync(Guid fileId, CancellationToken ct);
+	Task<Guid?> GetUserIdByAvatarFileIdAsync(Guid fileId, CancellationToken ct);//dasha: can be nll
 	Task AddAsync(User user, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
