@@ -17,13 +17,14 @@ public sealed class FilesAsset
 		if (ownerId == Guid.Empty) throw new ArgumentException("OwnerId is required.", nameof(ownerId));
 		if (string.IsNullOrWhiteSpace(storagePath)) throw new ArgumentException("StoragePath is required.", nameof(storagePath));
 		if (string.IsNullOrWhiteSpace(contentType)) throw new ArgumentException("ContentType is required.", nameof(contentType));
-		if (sizeBytes <= 0) throw new ArgumentException("SizeBytes cannot be negative.", nameof(sizeBytes));
+		if (sizeBytes <= 0) throw new ArgumentException("SizeBytes cannot be negative.", nameof(sizeBytes));//Dasha: "SizeBytes must be greater than zero."
 		Id = id;
 		OwnerId = ownerId;
 		StoragePath = storagePath;
-		ContentType = contentType;
+		ContentType = contentType;//Dasha: should we restrict file types?
 		SizeBytes = sizeBytes;
 		UploadedAtUtc = DateTime.UtcNow;
 	}
 
 }
+
