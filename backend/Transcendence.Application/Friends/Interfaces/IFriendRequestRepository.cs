@@ -1,7 +1,7 @@
 ﻿using Transcendence.Domain.Friends;
 
 namespace Transcendence.Application.Friends.Interfaces;
-public interface IFriendRequestRepository
+public interface IFriendshipRequestRepository
 {
 	Task<bool> ExistsPendingAsync(Guid requesterId, Guid targetUserId, CancellationToken ct);
 	Task AddAsync(FriendshipRequest request, CancellationToken ct);

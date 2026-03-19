@@ -65,7 +65,8 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 
 			// Only check DB if the name is ACTUALLY changing
 			// (Case-insensitive comparison is best practice for usernames)
-			if (!string.Equals(user.Username, newUsername, StringComparison.OrdinalIgnoreCase))
+			//if (!string.Equals(user.Username, newUsername, StringComparison.OrdinalIgnoreCase))
+			if (!string.Equals(user.Username, newUsername, StringComparison.Ordinal))//case sensitive better?
 			{
 				var existingUser = await _userRepository.GetByUsernameAsync(newUsername, ct);
 
@@ -90,7 +91,10 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 			user.UpdateBio(newBio);
 		}
 
-		// 3. Update AvatarFileId (Same logic as Bio)
+		// 3. Update AvatarFileId (Same logic as Bio) //This works, but design-wise it is a bit awkward:your domain stores AvatarFileId, but DTO sends AvatarUrl.
+		//												That means service has to parse URL text just to get the actual ID.
+		//												A cleaner backend contract would often be:
+		//												frontend sends avatarFileId.backend builds URL in response.instead of sending URL back into backend.
 		if (dto.AvatarUrl != null)
 		{
 			Guid? newAvatarFileId = null;
@@ -124,9 +128,9 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	public async Task<OtherProfileDto> GetOtherProfileAsync(Guid targetUserId, Guid viewerUserId, CancellationToken ct)
 	{
 		var user = await _userRepository.GetByIdAsync(targetUserId, ct)
-			?? throw new InvalidOperationException("User not found.");
+			?? throw new NotFoundException("User not found.");
 
-		bool areWeFrinds =
+		bool areWeFriends =
 			await _friendsRepository.IsFriendAsync(viewerUserId, targetUserId, ct);
 
 		return new OtherProfileDto
@@ -138,7 +142,7 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 			AvatarUrl = BuildAvatarFileUrl(user.AvatarFileId),
 			PostsCount = await _postRepository.CountByUserIdAsync(targetUserId, ct), //TODO
 			FriendsCount = await _friendsRepository.CountFriendsAsync(targetUserId, ct),
-			AreWeFriends = areWeFrinds
+			AreWeFriends = areWeFriends
 		};
 	}
 
@@ -148,6 +152,8 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 		var user = await _userRepository.GetByIdAsync(userId, ct)
 			?? throw new NotFoundException("User not found.");
 		
+		if (string.IsNullOrWhiteSpace(user.PasswordHash))
+			throw new InvalidOperationException("This account does not support password change.");//created with Google
 		
 		var verificationResult = _passwordHasher.VerifyHashedPassword(
 			user,
@@ -162,8 +168,7 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 		user.SetPasswordHash(_passwordHasher.HashPassword(user, dto.NewPassword));
 		await _userRepository.SaveChangesAsync(ct);
 	}
-
-	string? BuildAvatarFileUrl(Guid? fileId)
+	private static string? BuildAvatarFileUrl(Guid? fileId)
 		=> fileId is Guid id ? $"/files/{id}" : null;
 
 }

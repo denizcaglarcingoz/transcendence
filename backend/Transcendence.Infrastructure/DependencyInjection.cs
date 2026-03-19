@@ -41,7 +41,7 @@ public static class DependencyInjection
 
 		services.AddScoped<IFriendsQuery, FriendsQuery>();
         services.AddScoped<IFriendshipRepository, FriendshipRepository>();
-		services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+        services.AddScoped<IFriendshipRequestRepository, FriendshipRequestRepository>();
 		
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
