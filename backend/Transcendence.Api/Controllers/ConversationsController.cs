@@ -21,6 +21,24 @@ public class ConversationsController : ControllerBase
     {
         _chatService = chatService;
     }
+[HttpGet]
+public async Task<ActionResult<ApiResponse<List<ConversationDto>>>> GetConversations()
+    {
+        var userId = User.GetUserId();
+
+ 
+        var list = new List<ConversationDto>
+        {
+            new ConversationDto
+            {
+                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                TargetUserId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                LastMessage = "Hello from backend"
+            }
+        };
+
+        return this.OkResponse(list);
+}
     [HttpGet("{conversationId}/messages")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<ChatMessageDto>>>> GetMessages(
         Guid conversationId,

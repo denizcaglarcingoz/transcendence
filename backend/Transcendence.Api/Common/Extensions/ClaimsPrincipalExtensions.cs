@@ -6,21 +6,23 @@ public static class ClaimsPrincipalExtensions {
 
     public static  Guid GetUserId (this ClaimsPrincipal user)
     {
-        var claim = user.FindFirst("sub")?.Value ??  // Retrieves the first claim that matches a specified condition
-                    user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        // var claim = user.FindFirst("sub")?.Value ??  // Retrieves the first claim that matches a specified condition
+        //             user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (Guid.TryParse(claim , out Guid id))
-            return id;
-        throw new Transcendence.Domain.Exceptions.UnauthorizedAccessException("Unauthorized");
+        // if (Guid.TryParse(claim , out Guid id))
+        //     return id;
+        // throw new Transcendence.Domain.Exceptions.UnauthorizedAccessException("Unauthorized");
+        return Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     } 
     
     public static Guid? TryGetUserId(this ClaimsPrincipal user)
     {
-        var claim = user.FindFirst("sub")?.Value ?? 
-                     user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        // var claim = user.FindFirst("sub")?.Value ?? 
+        //              user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         
         
-        return  Guid.TryParse(claim, out var id) ? id : null; 
+        // return  Guid.TryParse(claim, out var id) ? id : null; 
+        return Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     }
 }
 
