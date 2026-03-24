@@ -12,7 +12,7 @@ using Transcendence.Domain.Auth;
 using Transcendence.Domain.Users;
 using Transcendence.Infrastructure.Auth;
 using Transcendence.Infrastructure.Persistence;
-using Transcendence.Infrastructure.Query;
+using Transcendence.Infrastructure.Queries;
 using Transcendence.Infrastructure.Repositories;
 using Transcendence.Infrastructure.Storage;
 
@@ -41,7 +41,7 @@ public static class DependencyInjection
 
 		services.AddScoped<IFriendsQuery, FriendsQuery>();
         services.AddScoped<IFriendshipRepository, FriendshipRepository>();
-		services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+        services.AddScoped<IFriendshipRequestRepository, FriendshipRequestRepository>();
 		
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
