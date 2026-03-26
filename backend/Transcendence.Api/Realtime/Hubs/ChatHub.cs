@@ -28,18 +28,17 @@ public sealed class ChatHub : Hub<IRealtimeClient>
         _notificationService = notificationService;
     }
 
-    public override async Task OnConnectedAsync() // зашел на сайт
+    public override async Task OnConnectedAsync() // triggered when a client establishes a SignalR connection
     {
         var userId = Context.User.GetUserId();
-
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.User(userId)); // add connId to user's collection of connections  
         Console.WriteLine($"User {userId} joined group user:{userId}");
         
         var userConversations = await _chatService.GetUserConversationsIds(userId);
         foreach (var c in userConversations)
-            await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(c)); // это группы чатов сигналR он добавляет соеденине, то есть тут id conversations SignalR и те что у нас в базе пересекаются
+            await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(c)); // add connection to conversation groups (group names are based on DB conversation IDs)
 
-          if (_presenceService.AddConnection(userId, Context.ConnectionId)) //became online
+          if (_presenceService.AddConnection(userId, Context.ConnectionId)) // returns true if this is the first active connection (user just became online)
         {
             var presence = new PresenceEventDto
             {
@@ -49,7 +48,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
             };
  
             foreach(var c in userConversations)
-                await Clients.Group(GroupNames.Conversation(c)).UserOnLine(presence);
+                await Clients.Group(GroupNames.Conversation(c)).UserOnLine(presence);  // broadcast to all active connections in the conversation group (all tabs/devices)
             /*  same faster:
                 var tasks = userConversations
                             .Select(c => Clients.Group(GroupNames.Conversation(c)).UserOnline(presence));
@@ -58,7 +57,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
            
         }
 
-        var onlineUsers = new HashSet<Guid>();
+        var onlineUsers = new HashSet<Guid>(); 
         
         foreach(var conv in userConversations)
         {
@@ -71,46 +70,19 @@ public sealed class ChatHub : Hub<IRealtimeClient>
             }
         }
          
-        await Clients.Caller.OnlineUsersSnapshot(onlineUsers);
+        await Clients.Caller.OnlineUsersSnapshot(onlineUsers); //notify who is online now
  
         await base.OnConnectedAsync();
     }
+ 
 
-//     public override async Task OnConnectedAsync()
-// {
-//     var userId = Context.User.GetUserId();
-
-//     var becameOnline =
-//         _presenceService.AddConnection(userId, Context.ConnectionId);
-
-//     await Groups.AddToGroupAsync(
-//         Context.ConnectionId,
-//         GroupNames.User(userId));
-
-//     var conversations =
-//         await _chatService.GetUserConversationsIds(userId);
-
-//     foreach (var c in conversations)
-//         await Groups.AddToGroupAsync(
-//             Context.ConnectionId,
-//             GroupNames.Conversation(c));
-
-//     var onlineUsers =
-//         _presenceService.GetOnlineUsers();
-
-//     await Clients.Caller
-//         .OnlineUsersSnapshot(onlineUsers);
-
-//     await base.OnConnectedAsync();
-// }
-
-    public override async Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)//triggered when a SignalR connection is closed (tab closed, network lost, etc.)
     {
         var userId = Context.User.TryGetUserId();
 
         if (userId is not null)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.User(userId.Value)); 
+            // await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.User(userId.Value)); //not necessary
             if (_presenceService.RemoveConnection(userId.Value, Context.ConnectionId)) // no more
             {
                 var presence = new PresenceEventDto
@@ -119,59 +91,46 @@ public sealed class ChatHub : Hub<IRealtimeClient>
                     IsOnline = false,
                     ChangedAt = DateTimeOffset.UtcNow
                 };
-                var userConversations = await _chatService.GetUserConversationsIds(userId.Value);//??!!!
+                var userConversations = await _chatService.GetUserConversationsIds(userId.Value);
 
                 foreach(var conv in userConversations)
                     await Clients.Group(GroupNames.Conversation(conv)).UserOffLine(presence);
             }
 
         }
-        await base.OnDisconnectedAsync(exception);
-    
-    /*
-        Почему не бросают throw здесь
-        OnDisconnectedAsync — это notification, а не операция
-        соединение уже мертво. ничего “починить” нельзя.
-        throw ничего не изменит
-
-        Поэтому: exception передаётся (для логирования
-            для аналитики нестабильных клиентов
-            для отладки reconnect’ов
-            НЕ для бизнес-логики
-        )но не пробрасывается
-    */
+        await base.OnDisconnectedAsync(exception); 
 
         //OnDisconnectedAsync is a lifecycle hook provided by SignalR. It is invoked by the framework when a client connection is terminated. We override it to execute domain-specific cleanup logic, while still calling the base implementation to allow SignalR to perform its internal resource cleanup. At this point, the HTTP request is already completed, but the authenticated user’s ClaimsPrincipal is still available via the Hub context.
     }
 
-    public async Task JoinConversation(Guid conversationId) //by client
+    public async Task JoinConversation(Guid conversationId) // user opened a chat → subscribe connection to conversation group
     {
         var userId = Context.User.GetUserId();
         await _chatService.AssertUserIsParticipant(conversationId, userId); 
-        await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); //SignalR does all
+        await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId));
     }
  
-    public async Task LeaveConversation(Guid conversationId) //browser tab closed
+    public async Task LeaveConversation(Guid conversationId) //user closed chat → remove connection from conversation group
     {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId));  //signalR
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId)); 
     }
 
-    public async Task SendMessage(SendMessageCommandDto dto)
+    public async Task SendMessage(SendMessageCommandDto dto)// user sends a message → persist and broadcast to conversation group
     {
         var senderId = Context.User.GetUserId();
 
-        var messageDto = await _chatService.SendMessageAsync(
+        var messageDto = await _chatService.SendMessageAsync( //validate, normalize timestamps, and persist message to databas
             senderId,
             dto.ConversationId,
             dto.ClientMessageId,
             dto.Content
         );
-        await Clients.Group(GroupNames.Conversation(dto.ConversationId)) //message
-                    .MessageReceived(messageDto); //online users with opened chats (client's method MessageReceived calls )
+        await Clients.Group(GroupNames.Conversation(dto.ConversationId))
+                    .MessageReceived(messageDto);
 
         var receivers = await _chatService.GetParticipantsIds(dto.ConversationId);
 
-        await _notificationService.NotifyNewMessage(receivers, senderId, messageDto); // online users with closed chat window
+        await _notificationService.NotifyNewMessage(receivers, senderId, messageDto);
         
         await Clients.Caller.MessageAck(new MessageAckDto  
         {
@@ -194,14 +153,14 @@ public sealed class ChatHub : Hub<IRealtimeClient>
 
         await Clients
                 .Group(GroupNames.User(senderId))  
-                .MessageDelivered(new MessageDeliveredDto
+                .MessageDelivered(new MessageDeliveredDto //send delivery event to all sender's active connections (multi-device support
                 {
                     ReaderId = userId,
                     MessageId = messageId                
                 });
     }
 
-    public  async Task MarkAsRead(Guid conversationId) //callling by client
+    public  async Task MarkAsRead(Guid conversationId)
     {
         var  userId = Context.User.GetUserId(); 
 
@@ -219,11 +178,11 @@ public sealed class ChatHub : Hub<IRealtimeClient>
     }   
     /*
 
-    connection.invoke → запрос к серверу
+    connection.invoke → request to server
 
     Clients.* → сервер пушит событие
 
-    connection.on → клиент слушает события
+    connection.on → client listens to events
 
 
     CLIENT (reader)
@@ -234,10 +193,10 @@ public sealed class ChatHub : Hub<IRealtimeClient>
     HUB
    |
    | → ChatService.MarkConversationAsRead
-   |       (запись в БД)
+   |       (database)
    |
    | → Clients.OthersInGroup
-           (уведомление отправителей)
+           (notify senders)
 
         UserA sends message
                 |
@@ -313,7 +272,7 @@ ChatMessageDto
   ▼
 ChatHub
   │
-  │ sents
+  │ sends
   ▼
 Clients.Group
 
