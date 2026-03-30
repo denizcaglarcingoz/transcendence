@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { db, requireAuth } from './db'
 import { mockPosts, mockComments, mockFeedPosts, mockFeedComments } from './posts'
+import { ChangePasswordDto } from '../types/api'
+import { mockFriends } from './friends'
 
 export const handlers = [
   // Auth
@@ -28,7 +30,28 @@ export const handlers = [
   }),
 
 
+  http.patch('/profile/password', async ({ request }) => {
+  const auth = requireAuth(request)
+  if (!auth.ok) {
+    return HttpResponse.json(auth.body, { status: auth.status })
+  }
 
+  const body = await request.json() as ChangePasswordDto
+
+  if (!body.CurrentPassword || !body.NewPassword) {
+    return HttpResponse.json(
+      {
+        IsSuccess: false,
+        Data: null,
+        Errors: ['Current password and new password are required.'],
+      },
+      { status: 400 }
+    )
+  }
+
+  return new HttpResponse(null, { status: 204 })
+}),
+  
 
 http.get('/posts/me', ({ request }) => {
     const auth = requireAuth(request)
@@ -128,7 +151,6 @@ http.get('/posts/:postId', ({ request, params }) => {
   })
 }),
 
-
 http.post('/posts/:postId/comments', async ({ request, params }) => {
   const auth = requireAuth(request)
   if (!auth.ok) {
@@ -176,10 +198,6 @@ http.post('/posts/:postId/comments', async ({ request, params }) => {
   )
 }),
 
-
-
-
-
   http.patch('/profile/me', async ({ request }) => {
   const auth = requireAuth(request)
   if (!auth.ok) return HttpResponse.json(auth.body, { status: auth.status })
@@ -194,7 +212,6 @@ http.post('/posts/:postId/comments', async ({ request, params }) => {
   })
 }),
 
-
   http.post('/profile/me/avatar', ({ request }) => {
     const auth = requireAuth(request)
     if (!auth.ok) return HttpResponse.json(auth.body, { status: auth.status })
@@ -205,46 +222,68 @@ http.post('/posts/:postId/comments', async ({ request, params }) => {
   }),
 
   // Friends
-  http.get('/friends', ({ request }) => {
-    const auth = requireAuth(request)
-    if (!auth.ok) return HttpResponse.json(auth.body, { status: auth.status })
-    return HttpResponse.json(db.friends)
-  }),
+  http.get('/friends/list', ({ request }) => {
+  const auth = requireAuth(request)
+  if (!auth.ok) {
+    return HttpResponse.json(auth.body, { status: auth.status })
+  }
 
-  http.post('/friends', async ({ request }) => {
-    const auth = requireAuth(request)
-    if (!auth.ok) return HttpResponse.json(auth.body, { status: auth.status })
+  return HttpResponse.json({
+    IsSuccess: true,
+    Data: mockFriends,
+    Errors: [],
+  })
+}),
 
-    const body = (await request.json()) as { friendId: string }
-    if (!body.friendId) return HttpResponse.json({ message: 'friendId required' }, { status: 400 })
+http.post('/friends/:targetUserId', ({ params, request }) => {
+  const auth = requireAuth(request)
+  if (!auth.ok) {
+    return HttpResponse.json(auth.body, { status: auth.status })
+  }
 
-    // Create a fake friend if not exists
-    if (!db.friends.find(f => f.id === body.friendId)) {
-      db.friends.unshift({
-        id: body.friendId,
-        displayName: `User ${body.friendId.slice(0, 6)}`,
-        avatarUrl: null,
-        isOnline: Math.random() > 0.5,
-      })
-    }
-    return HttpResponse.json({}, { status: 200 })
-  }),
+  const targetUserId = params.targetUserId as string
 
-  http.delete('/friends/:friendId', ({ params, request }) => {
-    const auth = requireAuth(request)
-    if (!auth.ok) return HttpResponse.json(auth.body, { status: auth.status })
+  if (!targetUserId) {
+    return HttpResponse.json(
+      {
+        IsSuccess: false,
+        Data: null,
+        Errors: ['targetUserId required'],
+      },
+      { status: 400 }
+    )
+  }
 
-    const friendId = params.friendId as string
-    db.friends = db.friends.filter(f => f.id !== friendId)
-    return HttpResponse.json({}, { status: 200 })
-  }),
+  if (!mockFriends.find((f) => f.Id === targetUserId)) {
+    mockFriends.unshift({
+      Id: targetUserId,
+      Username: `user_${targetUserId.slice(0, 6)}`,
+      FullName: `User ${targetUserId.slice(0, 6)}`,
+      AvatarUrl: null,
+    })
+  }
 
+  return new HttpResponse(null, { status: 201 })
+}),,
 
+http.delete('/friends/:friendUserId', ({ params, request }) => {
+  const auth = requireAuth(request)
+  if (!auth.ok) {
+    return HttpResponse.json(auth.body, { status: auth.status })
+  }
 
+  const friendUserId = params.friendUserId as string
 
+  const index = mockFriends.findIndex((f) => f.Id === friendUserId)
+  if (index !== -1) {
+    mockFriends.splice(index, 1)
+  }
+
+  return new HttpResponse(null, { status: 204 })
+}),,
 
     //Comments
-    http.get('/posts/:postId/comments', ({ request, params }) => {
+  http.get('/posts/:postId/comments', ({ request, params }) => {
   const auth = requireAuth(request)
   if (!auth.ok) {
     return HttpResponse.json(auth.body, { status: auth.status })

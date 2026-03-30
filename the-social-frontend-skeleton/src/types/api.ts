@@ -17,13 +17,12 @@ export type ProfileDto = {
   friendsCount?: number
 }
 
-export type FriendDto = {
-  id: string
-  displayName: string
-  avatarUrl?: string | null
-  username?: string
-  isOnline?: boolean
-  isFollowing?: boolean
+export type FriendDto =
+{
+  Id: string
+  Username?: string
+  FullName: string
+  AvatarUrl?: string | null
 }
 
 export type ChatMessageDto = {
@@ -122,6 +121,21 @@ export type UpdateProfileDto =
   AvatarUrl?: string | null
   Password?: string | null
 }
+
+export type ChangePasswordDto = 
+{
+	// [Required]
+	// public string CurrentPassword { get; init; } = default!;
+// 
+	// [Required]
+	// [StringLength(100, MinimumLength = 8)]
+	// public string NewPassword { get; init; } = default!;
+
+  CurrentPassword: string
+  NewPassword: string
+
+}
+
 
 export type CommentPreviewDto = 
 {
