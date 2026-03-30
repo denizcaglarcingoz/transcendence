@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getMyProfile, updateMyProfile, uploadAvatar, getMyProfilePostPreviews } from '../api/profile.api'
-import type { UpdateProfileDto } from '../types/api'
+import { getMyProfile, updateMyProfile, uploadAvatar, getMyProfilePostPreviews, changePassword } from '../api/profile.api'
+import type { UpdateProfileDto, ChangePasswordDto } from '../types/api'
 
 export function useMyProfile() {
   return useQuery({
@@ -18,6 +18,23 @@ export function useUpdateProfile() {
     },
   })
 }
+
+export function useChangePassword() {
+  return useMutation<void, Error, ChangePasswordDto>({
+    mutationFn: (payload: ChangePasswordDto) => {
+      if (!payload.CurrentPassword.trim()) {
+        throw new Error('Current password is required.')
+      }
+
+      if (!payload.NewPassword.trim()) {
+        throw new Error('New password is required.')
+      }
+
+      return changePassword(payload)
+    },
+  })
+}
+
 
 export function useUploadAvatar() {
   const qc = useQueryClient()

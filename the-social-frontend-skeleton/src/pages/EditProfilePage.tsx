@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMyProfile, useUpdateProfile } from '../hooks/useProfile'
-import type { UpdateProfileDto } from '../types/api'
+import { useMyProfile, useUpdateProfile, useChangePassword } from '../hooks/useProfile'
+import type { UpdateProfileDto, ChangePasswordDto } from '../types/api'
 
 type EditProfileForm = {
   FullName: string
   Username: string
   Bio: string
   AvatarUrl: string
-}
-
-type ChangePasswordForm = {
-  OldPassword: string
-  NewPassword: string
 }
 
 const DUMMY_PROFILE_FORM: EditProfileForm = {
@@ -31,6 +26,8 @@ export function EditProfilePage() {
     isError: isProfileError,
   } = useMyProfile()
   const updateProfile = useUpdateProfile()
+  const changePassword = useChangePassword()
+
 
   const [profileForm, setProfileForm] = useState<EditProfileForm>({
     FullName: '',
@@ -40,8 +37,8 @@ export function EditProfilePage() {
   })
   const [originalProfileForm, setOriginalProfileForm] = useState<EditProfileForm | null>(null)
 
-  const [passwordForm, setPasswordForm] = useState<ChangePasswordForm>({
-    OldPassword: '',
+  const [passwordForm, setPasswordForm] = useState<ChangePasswordDto>({
+    CurrentPassword: '',
     NewPassword: '',
   })
 
@@ -100,10 +97,23 @@ export function EditProfilePage() {
     })
   }
 
-  function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault()
-    console.log('Change password:', passwordForm)
-    // await changePassword(passwordForm)
+  async function handleChangePassword(e: React.FormEvent) {
+  e.preventDefault()
+
+      if (!passwordForm.CurrentPassword || !passwordForm.NewPassword) {
+        return
+      }
+    
+    
+      await changePassword.mutateAsync({
+        CurrentPassword: passwordForm.CurrentPassword,
+        NewPassword: passwordForm.NewPassword,
+      })
+    
+      setPasswordForm({
+        CurrentPassword: '',
+        NewPassword: '',
+      })
   }
 
   function handleDiscard() {
@@ -243,11 +253,11 @@ export function EditProfilePage() {
               <input
                 id="oldPassword"
                 type="password"
-                value={passwordForm.OldPassword}
+                value={passwordForm.CurrentPassword}
                 onChange={(e) =>
                   setPasswordForm((prev) => ({
                     ...prev,
-                    OldPassword: e.target.value,
+                    CurrentPassword: e.target.value,
                   }))
                 }
                 className="h-11 w-full rounded-xl border border-panel px-4 outline-none focus:border-black"
