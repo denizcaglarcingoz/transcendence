@@ -19,7 +19,9 @@ public interface IChatService
     Task <IReadOnlyList<Guid>>  GetUserConversationsIds(Guid userId);
     Task <IReadOnlyList<Guid>>  GetParticipantsIds(Guid conversationId);
     Task MarkConversationAsRead(Guid userId, Guid conversationId);
+
     Task<Guid?> GetLastMessageId(Guid conversationId);
+    Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId);
 };
 
 /*
