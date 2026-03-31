@@ -157,7 +157,10 @@ public class ChatService : IChatService
             return await _messageRepository.GetLastMessageId(conversationId);
 
         }
-
+	public Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId)
+	{
+		throw new NotImplementedException("GetConversations is not implemented yet.");
+	}
 }
  
  /*
