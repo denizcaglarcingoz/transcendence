@@ -79,30 +79,30 @@ public sealed class PostsRepository : IPostsRepository
 	{
 		return _db.Likes.CountAsync(x => x.PostId == postId, ct);
 	}
-	public async Task<IReadOnlyList<CommentPreviewDto>> GetCommentsAsync(Guid postId, CancellationToken ct)
-	{
-		var items = await (
-			from c in _db.Comments
-			join u in _db.Users on c.AuthorId equals u.Id
-			where c.PostId == postId
-			orderby c.CreatedAtUtc //ascending
-			select new CommentPreviewDto
-			{
-				Id = c.Id,
-				PostId = c.PostId,
-				AuthorId = c.AuthorId,
-				CreatedAtUtc = c.CreatedAtUtc,
-				Content = c.Content,
-				Username = u.Username,
-				FullName = u.FullName,
-				AuthorProfileImageUrl = u.AvatarFileId != null
-					? "/files/" + u.AvatarFileId
-					: ""
-			}
-			).ToListAsync(ct);
+	// public async Task<IReadOnlyList<CommentPreviewDto>> GetCommentsAsync(Guid postId, CancellationToken ct)
+	// {
+	// 	var items = await (
+	// 		from c in _db.Comments
+	// 		join u in _db.Users on c.AuthorId equals u.Id
+	// 		where c.PostId == postId
+	// 		orderby c.CreatedAtUtc //ascending
+	// 		select new CommentPreviewDto
+	// 		{
+	// 			Id = c.Id,
+	// 			PostId = c.PostId,
+	// 			AuthorId = c.AuthorId,
+	// 			CreatedAtUtc = c.CreatedAtUtc,
+	// 			Content = c.Content,
+	// 			Username = u.Username,
+	// 			FullName = u.FullName,
+	// 			AuthorProfileImageUrl = u.AvatarFileId != null
+	// 				? "/files/" + u.AvatarFileId
+	// 				: ""
+	// 		}
+	// 		).ToListAsync(ct);
 
-		return items;
-	}
+	// 	return items;
+	// }
 
 	//SaveChangesAsync
 	public Task SaveChangesAsync(CancellationToken ct)
