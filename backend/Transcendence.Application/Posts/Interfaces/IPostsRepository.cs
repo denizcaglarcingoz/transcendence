@@ -32,7 +32,7 @@ public interface IPostsRepository
 
 	Task<Like?> GetLikeAsync(Guid postId, Guid currentUserId, CancellationToken ct);
 	Task<int> GetLikeCountAsync(Guid postId, CancellationToken ct);
-	Task<IReadOnlyList<CommentPreviewDto>> GetCommentsAsync(Guid postId, CancellationToken ct);
+	//Task<IReadOnlyList<CommentPreviewDto>> GetCommentsAsync(Guid postId, CancellationToken ct);
 
 
 	//SaveChangesAsync
