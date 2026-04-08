@@ -9,7 +9,7 @@ using Transcendence.Domain.Chat;
 
 namespace Transcendence.Infrastructure.Persistence;
 
-public class TranscendenceDbContext : DbContext
+public class TranscendenceDbContext: DbContext
 {
     public TranscendenceDbContext(
         DbContextOptions<TranscendenceDbContext> options) : base(options) { }

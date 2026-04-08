@@ -29,8 +29,8 @@ export const router = createBrowserRouter([
           { path: '/chat', element: <ChatPage /> },
           { path: '/edit-profile', element: <EditProfilePage /> },
           { path: 'settings', element: <SettingsPage /> },
-          //{ path: '/posts/:postId', element: <PostDetailPage /> },
-          {/*{ path: '/search', element: <SearchPage /> },*/}
+          // { path: '/posts/:postId', element: <PostDetailPage /> },
+          // { path: '/search', element: <SearchPage /> },
         ],
       },
     ],

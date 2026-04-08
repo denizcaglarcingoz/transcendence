@@ -6,5 +6,7 @@ public sealed class ProfilePostPreviewDto
 {
 	public Guid Id { get; set; }
 	public Guid AuthorId { get; set; }
+	
+	public DateTime CreatedAtUtc { get; set; }//dasha: a stable sorting field needed
 	public string? ImageUrl { get; set; }
 }
