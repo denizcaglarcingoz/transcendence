@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Transcendence.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Transcendence.Infrastructure.Persistence;
 namespace Transcendence.Infrastructure.Migrations
 {
     [DbContext(typeof(TranscendenceDbContext))]
-    partial class TranscendenceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407105504_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,12 +34,6 @@ namespace Transcendence.Infrastructure.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("LastMessageAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastMessageText")
-                        .HasColumnType("text");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
@@ -311,9 +308,6 @@ namespace Transcendence.Infrastructure.Migrations
                     b.Property<string>("GoogleId")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(255)
