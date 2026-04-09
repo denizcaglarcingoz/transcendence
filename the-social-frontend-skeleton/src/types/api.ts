@@ -191,11 +191,15 @@ export type SignUpRequestDto =
 
 }
 
-export type AuthResponseDto = 
-{
-  token : string
+export type AuthUserDto = {
+  id: string
+  username: string
 }
 
+export type AuthResponseDto = {
+  token: string
+  user: AuthUserDto
+}
 export interface GoogleSignInRequestDto {
   credential: string // JWT token from Google
 }

@@ -6,21 +6,26 @@ using Transcendence.Domain.Chat;
 using Transcendence.Domain.Exceptions;
 using Transcendence.Domain.Users;
 using Transcendence.Application.Common.Responses;
+using Transcendence.Application.Users.Interfaces;
 namespace Transcendence.Application.Chat.Services;
 
 public class ChatService : IChatService
-{
+{ 
     private readonly IConversationRepository _coversationRepository;
     private readonly IMessageRepository _messageRepository;
+    private readonly IUserRepository _userRepository;
 
 
     public ChatService(
         IConversationRepository conversationRepository,
-        IMessageRepository messageRepository
+        IMessageRepository messageRepository,
+        IUserRepository userRepository
         )
     {
         _coversationRepository = conversationRepository;
         _messageRepository = messageRepository;
+        _userRepository = userRepository;
+
 
     }
 
@@ -162,17 +167,42 @@ public class ChatService : IChatService
         }
 
     public async Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId)
-    {
-        var conversations = await _coversationRepository.GetConversations(userId);
+{
+    var conversations = await _coversationRepository.GetConversations(userId);
 
-        var dtos = conversations.OrderByDescending(c => c.LastMessageAt).Select( c => new ConversationDto
+    var targetUserIds = conversations
+        .Select(c => c.Participants.First(p => p.UserId != userId).UserId)
+        .Distinct()
+        .ToList();
+
+    var users = await _userRepository.GetByIdsAsync(targetUserIds, CancellationToken.None);
+
+    var usersById = users.ToDictionary(u => u.Id);
+
+    var dtos = conversations
+        .OrderByDescending(c => c.LastMessageAt)
+        .Select(c =>
         {
-            Id = c.Id,
-            TargetUserId = c.Participants.First(p => p.UserId != userId).UserId,
-            LastMessage = c.LastMessageText ?? ""
-        }).ToList();
-        return dtos;
-    }
+            var targetUserId = c.Participants.First(p => p.UserId != userId).UserId;
+            usersById.TryGetValue(targetUserId, out var targetUser);
+
+            return new ConversationDto
+            {
+                Id = c.Id,
+                TargetUserId = targetUserId,
+                TargetUserName = targetUser?.Username ?? targetUserId.ToString()[..8],
+                TargetUserAvatarUrl = targetUser?.AvatarFileId.HasValue == true
+                    ? "/files/" + targetUser.AvatarFileId.Value
+                    : null,
+                LastMessage = c.LastMessageText ?? "",
+                LastMessageAt = c.LastMessageAt,
+                // UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead)
+            };
+        })
+        .ToList();
+
+    return dtos;
+}
 
 }
  
