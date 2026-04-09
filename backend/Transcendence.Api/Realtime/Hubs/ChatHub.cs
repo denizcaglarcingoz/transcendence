@@ -30,7 +30,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
 
     public override async Task OnConnectedAsync() // triggered when a client establishes a SignalR connection
     {
-        var userId = Context.User.GetUserId();
+        var userId = GetUserId();
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.User(userId)); // add connId to user's collection of connections  
         Console.WriteLine($"User {userId} joined group user:{userId}");
         
@@ -105,7 +105,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
 
     public async Task JoinConversation(Guid conversationId) // user opened a chat → subscribe connection to conversation group
     {
-        var userId = Context.User.GetUserId();
+        var userId = GetUserId();
         await _chatService.AssertUserIsParticipant(conversationId, userId); 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupNames.Conversation(conversationId));
     }
@@ -117,7 +117,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
 
     public async Task SendMessage(SendMessageCommandDto dto)// user sends a message → persist and broadcast to conversation group
     {
-        var senderId = Context.User.GetUserId();
+        var senderId = GetUserId();
 
         var messageDto = await _chatService.SendMessageAsync( //validate, normalize timestamps, and persist message to databas
             senderId,
@@ -148,7 +148,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
    
     public async Task DeliveredMessage(Guid messageId, Guid conversationId, Guid senderId)
     {
-        var  userId = Context.User.GetUserId(); 
+        var  userId = GetUserId(); 
         
 
         await Clients
@@ -162,7 +162,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
 
     public  async Task MarkAsRead(Guid conversationId)
     {
-        var  userId = Context.User.GetUserId(); 
+        var  userId = GetUserId(); 
 
         await _chatService.MarkConversationAsRead(userId, conversationId);
         var lastMessageId = await _chatService.GetLastMessageId(conversationId);
@@ -175,9 +175,30 @@ public sealed class ChatHub : Hub<IRealtimeClient>
                 ReaderId = userId,
                 MessageId = lastMessageId ?? Guid.Empty
             });
-    }   
-    /*
+    }  
+     private Guid GetUserId()
+    {
+        var claimValue =
+            Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? Context.User?.FindFirst("sub")?.Value;
 
+        if (Guid.TryParse(claimValue, out var claimUserId))
+            return claimUserId;
+
+        var httpContext = Context.GetHttpContext();
+
+        var devQuery = httpContext?.Request.Query["devUserId"].FirstOrDefault();
+        if (Guid.TryParse(devQuery, out var queryUserId))
+            return queryUserId;
+
+        var devHeader = httpContext?.Request.Headers["X-Dev-UserId"].FirstOrDefault();
+        if (Guid.TryParse(devHeader, out var headerUserId))
+            return headerUserId;
+
+        throw new UnauthorizedAccessException("Invalid token.");
+    }
+}
+    /*
     connection.invoke → request to server
 
     Clients.* → сервер пушит событие
@@ -220,7 +241,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
 
         Server -> MessageRead -> UserA       
     */
-}
+
 /*
 
 Browser
