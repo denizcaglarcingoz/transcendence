@@ -163,24 +163,24 @@ public class ChatService : IChatService
     }
     public async Task MarkConversationAsRead(Guid userId, Guid conversationId)
     {
-        var participant = await _coversationRepository.GetParticipant(userId,conversationId);
-        
-        if (participant is not null)
-            participant.LastReadAt = DateTimeOffset.UtcNow;     
-            
-    }
+        var participant = await _coversationRepository.GetParticipant(userId, conversationId);
 
+        if (participant is not null)
+        {
+            participant.LastReadAt = DateTimeOffset.UtcNow;
+            await _coversationRepository.SaveChangesAsync();
+        }
+    }
     public async Task<Guid?> GetLastMessageId(Guid conversationId)
         {
             return await _messageRepository.GetLastMessageId(conversationId);
 
         }
 
-    public async Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId)
+public async Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId)
 {
     var conversations = await _coversationRepository.GetConversations(userId);
     conversations = conversations.Where(c => c.LastMessageAt != null).ToList();
-    
 
     var targetUserIds = conversations
         .Select(c => c.Participants.First(p => p.UserId != userId).UserId)
@@ -188,32 +188,39 @@ public class ChatService : IChatService
         .ToList();
 
     var users = await _userRepository.GetByIdsAsync(targetUserIds, CancellationToken.None);
-
     var usersById = users.ToDictionary(u => u.Id);
 
-    var dtos = conversations
-        .OrderByDescending(c => c.LastMessageAt)
-        .Select(c =>
-        {
-            var targetUserId = c.Participants.First(p => p.UserId != userId).UserId;
-            usersById.TryGetValue(targetUserId, out var targetUser);
+    var dtos = new List<ConversationDto>();
 
-            return new ConversationDto
-            {
-                Id = c.Id,
-                TargetUserId = targetUserId,
-                TargetUserName = targetUser?.Username ?? targetUserId.ToString()[..8], //
-                TargetUserAvatarUrl = targetUser?.AvatarFileId.HasValue == true
-                    ? "/files/" + targetUser.AvatarFileId.Value
-                    : null,
-                LastMessage = c.LastMessageText ?? "",
-                LastMessageAt = c.LastMessageAt,
-                // UnreadCount = c.Messages.Count(m => m.SenderId != userId && !m.IsRead)
-            };
-        })
-        .ToList();
+    foreach (var c in conversations.OrderByDescending(c => c.LastMessageAt))
+    {
+        var targetUserId = c.Participants.First(p => p.UserId != userId).UserId;
+        var myParticipant = c.Participants.First(p => p.UserId == userId);
+
+        usersById.TryGetValue(targetUserId, out var targetUser);
+
+        var unreadCount = await _messageRepository.GetUnreadCount(
+            c.Id,
+            userId,
+            myParticipant.LastReadAt
+        );
+
+        dtos.Add(new ConversationDto
+        {
+            Id = c.Id,
+            TargetUserId = targetUserId,
+            TargetUserName = targetUser?.Username ?? targetUserId.ToString()[..8],
+            TargetUserAvatarUrl = targetUser?.AvatarFileId.HasValue == true
+                ? "/files/" + targetUser.AvatarFileId.Value
+                : null,
+            LastMessage = c.LastMessageText ?? "",
+            LastMessageAt = c.LastMessageAt,
+            UnreadCount = unreadCount
+        });
+    }
 
     return dtos;
+    
 }
 
 }

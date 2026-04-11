@@ -19,6 +19,47 @@ import {
   type MessageReadDto, 
 } from '../api/chat.api'
 
+type NotificationType = 1 | 2 | 3 | 4 | 5
+
+type NotificationDto = {
+  id: string
+  type: NotificationType
+  payload: ChatMessageDto
+  createdAt: string
+}
+function playSystemBeep() {
+  try {
+    const audioContext = new AudioContext()
+    const oscillator = audioContext.createOscillator()
+    const gain = audioContext.createGain()
+
+    oscillator.type = 'sine'
+    oscillator.frequency.value = 880
+    gain.gain.value = 0.05
+
+    oscillator.connect(gain)
+    gain.connect(audioContext.destination)
+
+    oscillator.start()
+
+    setTimeout(() => {
+      oscillator.stop()
+      void audioContext.close()
+    }, 120)
+  } catch (err) {
+    console.error('Failed to play sound', err)
+  }
+}
+
+function publishUnreadCount(nextConversations: ConversationDto[]) {
+  const unreadCount = nextConversations.reduce(
+    (sum, item) => sum + (item.unreadCount ?? 0),
+    0
+  )
+
+  window.dispatchEvent(new CustomEvent('chat-unread-changed', { detail: unreadCount }))
+}
+
 export function ChatPage() {
   const { user } = useAuth()
   const currentUserId = user?.id ?? null
@@ -37,28 +78,30 @@ export function ChatPage() {
   const [creatingDirect, setCreatingDirect] = useState(false)
   const [targetUserIdInput, setTargetUserIdInput] = useState('')
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([])
+  const [deliveredMessageIds, setDeliveredMessageIds] = useState<string[]>([])
 
   const connectionRef = useRef<HubConnection | null>(null)
   const activeConversationIdRef = useRef<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  async function loadConversations() {
-    if (!currentUserId) return []
+    async function loadConversations() {
+      if (!currentUserId) return []
 
-    setLoadingChats(true)
-    setError(null)
+      setLoadingChats(true)
+      setError(null)
 
-    try {
-      const data = await getConversations(currentUserId)
-      setConversations(data)
-      return data
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load conversations')
-      return []
-    } finally {
-      setLoadingChats(false)
+      try {
+        const data = await getConversations(currentUserId)
+        setConversations(data)
+        publishUnreadCount(data)
+        return data
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load conversations')
+        return []
+      } finally {
+        setLoadingChats(false)
+      }
     }
-  }
 
   async function loadConversationMessages(conversationId: string) {
     if (!currentUserId) return
@@ -144,27 +187,62 @@ async function handleCreateDirectConversation() {
     connectionRef.current = connection
     console.log('creating new SignalR connection')
 
-    connection.on('MessageReceived', (message: ChatMessageDto) => {
-      console.log('MessageReceived', message)
+connection.on('MessageReceived', (message: ChatMessageDto) => {
+  console.log('MessageReceived', message)
 
-      if (message.conversationId === activeConversationIdRef.current) {
-        setMessages(prev => {
-          const exists = prev.some(item => item.messageId === message.messageId)
-          if (exists) return prev
-          return [...prev, message]
-        })
-      }
+  const isActive = message.conversationId === activeConversationIdRef.current
+  const isMine = message.senderId === currentUserId
 
-      void loadConversations()
+  if (isActive) {
+    setMessages(prev => {
+      const exists = prev.some(item => item.messageId === message.messageId)
+      if (exists) return prev
+      return [...prev, message]
     })
+  }
+
+  if (isActive && !document.hidden && !isMine && connectionRef.current) {
+    void markAsRead(connectionRef.current, message.conversationId)
+      .then(() => loadConversations())
+      .catch(err => console.error('Failed to mark as read after receiving message', err))
+  } else {
+    void loadConversations()
+  }
+})
 
     connection.on('MessageAck', (ack: MessageAckDto) => {
       console.log('MessageAck', ack)
     })
 
-    connection.on('MessageDelivered', (payload: MessageDeliveredDto) => {
-      console.log('MessageDelivered', payload)
+  connection.on('MessageDelivered', (payload: MessageDeliveredDto) => {
+    console.log('MessageDelivered', payload)
+
+    setDeliveredMessageIds(prev => {
+      if (prev.includes(payload.messageId)) return prev
+      return [...prev, payload.messageId]
     })
+  })
+
+  connection.on('ConversationsChanged', () => {
+    void loadConversations()
+  })
+
+  connection.on('NotificationReceived', (notification: NotificationDto) => {
+    console.log('NotificationReceived', notification)
+
+    const message = notification.payload
+    const isMyOwnMessage = message.senderId === currentUserId
+    const isActiveConversation = message.conversationId === activeConversationIdRef.current
+
+    if (isMyOwnMessage) return
+
+    if (!isActiveConversation || document.hidden) {
+      playSystemBeep()
+    }
+
+    void loadConversations()
+  })
+
 
     connection.on('MessageRead', (payload: MessageReadDto) => {
       console.log('MessageRead', payload)
@@ -204,9 +282,7 @@ async function handleCreateDirectConversation() {
       setOnlineUserIds(prev => prev.filter(id => id !== userId))
     })
 
-    connection.on('ConversationsChanged', () => {
-      void loadConversations()
-    })
+ 
     connection.onreconnected(async () => {
       try {
         if (activeConversationIdRef.current) {
@@ -248,6 +324,46 @@ async function handleCreateDirectConversation() {
       setSending(false)
     }
   }
+  async function syncActiveConversationReadState() {
+    if (!connectionRef.current) return
+    if (!activeConversationIdRef.current) return
+    if (document.hidden) return
+
+    try {
+      await markAsRead(connectionRef.current, activeConversationIdRef.current)
+
+      setConversations(prev =>
+        prev.map(item =>
+          item.id === activeConversationIdRef.current
+            ? { ...item, unreadCount: 0 }
+            : item
+        )
+      )
+
+      await loadConversations()
+    } catch (err) {
+      console.error('Failed to sync read state', err)
+    }
+  }
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (!document.hidden) {
+        void syncActiveConversationReadState()
+      }
+    }
+
+    function handleWindowFocus() {
+      void syncActiveConversationReadState()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleWindowFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleWindowFocus)
+    }
+  }, [])
 
   useEffect(() => {
     if (!currentUserId) return
@@ -421,7 +537,11 @@ async function handleCreateDirectConversation() {
                     </div>
 
                     <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
-                      {message.isReadByOthers ? 'Read' : 'Sent'}
+                      {message.isReadByOthers
+                        ? 'Read'
+                        : deliveredMessageIds.includes(message.messageId)
+                          ? 'Delivered'
+                          : 'Sent'}
                     </div>
                   </div>
                 </div>
