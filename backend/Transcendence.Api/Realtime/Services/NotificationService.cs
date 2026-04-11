@@ -25,4 +25,29 @@ public class NotificationService : INotificationService
             Console.WriteLine(
              $"Notify message {message.MessageId} to {string.Join(",", groups)}");
     }
+    public async Task NotifyConversationCreated(Guid userA, Guid userB, Guid conversationId)
+    {
+    var groups = new[]
+    {
+        GroupNames.User(userA),
+        GroupNames.User(userB)
+    };
+         await _hub.Clients.Groups(groups).ConversationsChanged();
+    }
 }
+/*
+User-group
+
+Для личных уведомлений:
+	•	новый чат
+	•	новые уведомления
+	•	presence
+	•	“обнови список”
+
+Conversation-group
+
+Для конкретного открытого чата:
+	•	realtime messages
+	•	message read
+	•	message delivered
+*/

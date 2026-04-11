@@ -41,15 +41,15 @@ public class ConversationsController : ControllerBase
     }
 
     [HttpPost("direct")]
-    public async Task<ActionResult<ApiResponse<Guid>>> CreateDirectConversation(
+    public async Task<ActionResult<ApiResponse<CreateOrGetConversationResult>>> CreateDirectConversation(
         [FromBody] CreateDirectConversationDto dto)
     {
         var userId = GetUserId();
 
-        var conversationId = await _chatService
+        var conversation = await _chatService
             .CreateOrGetDirectConversationAsync(userId, dto.TargetUserId);
 
-        return this.OkResponse(conversationId);
+        return this.OkResponse(conversation);
     }
 
     private Guid GetUserId()

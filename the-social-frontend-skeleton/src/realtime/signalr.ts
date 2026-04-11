@@ -33,6 +33,10 @@ export async function startConnection(conn: HubConnection) {
   await conn.start()
 }
 
+connection.on('ConversationsChanged', () => {
+  void loadConversations()
+})
+
 export async function stopConnection(conn: HubConnection) {
   if (conn.state === 'Disconnected') return
   await conn.stop()

@@ -12,4 +12,5 @@ public interface IRealtimeClient
     Task OnlineUsersSnapshot(IEnumerable<Guid> users);
     Task MessageRead(MessageReadDto read);
     Task MessageDelivered(MessageDeliveredDto delivered);
+    Task ConversationsChanged();
 }

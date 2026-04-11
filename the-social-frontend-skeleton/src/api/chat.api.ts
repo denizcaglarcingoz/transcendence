@@ -42,6 +42,12 @@ export type SendMessageCommandDto = {
   content: string
 }
 
+export type CreateOrGetConversationResult = {
+  conversationId: string
+  isCreated: boolean
+}
+
+
 type ApiResponse<T> = {
   data: T
 }
@@ -78,8 +84,8 @@ export async function getConversations(userId: string): Promise<ConversationDto[
 export async function createDirectConversation(
   userId: string,
   targetUserId: string
-): Promise<string> {
-  return apiFetch<string>(userId, `${API_BASE_URL}/conversations/direct`, {
+): Promise<CreateOrGetConversationResult> {
+  return apiFetch<CreateOrGetConversationResult>(userId, `${API_BASE_URL}/conversations/direct`, {
     method: 'POST',
     body: JSON.stringify({ targetUserId }),
   })

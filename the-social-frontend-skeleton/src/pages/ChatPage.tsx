@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { HubConnection } from '@microsoft/signalr'
 import { useAuth } from '../auth/AuthContext'
+
 import {
   createChatConnection,
   createDirectConversation,
@@ -15,7 +16,7 @@ import {
   type ConversationDto,
   type MessageAckDto,
   type MessageDeliveredDto,
-  type MessageReadDto,
+  type MessageReadDto, 
 } from '../api/chat.api'
 
 export function ChatPage() {
@@ -35,6 +36,7 @@ export function ChatPage() {
   const [sending, setSending] = useState(false)
   const [creatingDirect, setCreatingDirect] = useState(false)
   const [targetUserIdInput, setTargetUserIdInput] = useState('')
+  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([])
 
   const connectionRef = useRef<HubConnection | null>(null)
   const activeConversationIdRef = useRef<string | null>(null)
@@ -100,32 +102,47 @@ export function ChatPage() {
     }
   }
 
-  async function handleCreateDirectConversation() {
-    if (!currentUserId) return
+async function handleCreateDirectConversation() {
+  if (!currentUserId) return
 
-    const targetUserId = targetUserIdInput.trim()
-    if (!targetUserId) return
+  const targetUserId = targetUserIdInput.trim()
+  if (!targetUserId) return
 
-    setCreatingDirect(true)
-    setError(null)
+  setCreatingDirect(true)
+  setError(null)
 
-    try {
-      const conversationId = await createDirectConversation(currentUserId, targetUserId)
-      await loadConversations()
-      await openConversation(conversationId)
-      setTargetUserIdInput('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create direct conversation')
-    } finally {
-      setCreatingDirect(false)
-    }
+  try {
+    const result = await createDirectConversation(currentUserId, targetUserId)
+
+    await openConversation(result.conversationId)
+
+    setTargetUserIdInput('')
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Failed to create direct conversation')
+  } finally {
+    setCreatingDirect(false)
   }
+}
 
   async function setupSignalR() {
+    console.log('setupSignalR called')
     if (!currentUserId) return
 
-    const connection = createChatConnection(currentUserId)
+
+
+      if (connectionRef.current) {
+        if (
+          connectionRef.current.state === 'Connected' ||
+          connectionRef.current.state === 'Connecting'
+        ) {
+          console.log('SignalR already exists, skip creating')
+          return
+        }
+      }
+
+        const connection = createChatConnection(currentUserId)
     connectionRef.current = connection
+    console.log('creating new SignalR connection')
 
     connection.on('MessageReceived', (message: ChatMessageDto) => {
       console.log('MessageReceived', message)
@@ -165,17 +182,48 @@ export function ChatPage() {
 
     connection.on('OnlineUsersSnapshot', (users: string[]) => {
       console.log('OnlineUsersSnapshot', users)
+      setOnlineUserIds(users)
     })
 
     connection.on('UserOnLine', payload => {
       console.log('UserOnLine', payload)
+
+      const userId = payload.userId as string
+
+      setOnlineUserIds(prev => {
+        if (prev.includes(userId)) return prev
+        return [...prev, userId]
+      })
     })
 
     connection.on('UserOffLine', payload => {
       console.log('UserOffLine', payload)
+
+      const userId = payload.userId as string
+
+      setOnlineUserIds(prev => prev.filter(id => id !== userId))
     })
 
+    connection.on('ConversationsChanged', () => {
+      void loadConversations()
+    })
+    connection.onreconnected(async () => {
+      try {
+        if (activeConversationIdRef.current) {
+          await joinConversation(connection, activeConversationIdRef.current)
+        }
+
+        
+      } catch (err) {
+        console.error('Failed after reconnect', err)
+      }
+    })
+    connection.onclose(() => {
+    console.log('Chat connection closed')
+    setOnlineUserIds([])
+  })
     await startConnection(connection)
+    console.log('SignalR started')
   }
 
   async function handleSend() {
@@ -226,8 +274,13 @@ export function ChatPage() {
 
     return () => {
       isMounted = false
-      if (connectionRef.current) {
-        void connectionRef.current.stop()
+
+      const conn = connectionRef.current
+      connectionRef.current = null
+
+      if (conn) {
+        console.log('cleanup ChatPage, stopping connection')
+        void conn.stop()
       }
     }
   }, [currentUserId])
@@ -271,37 +324,59 @@ export function ChatPage() {
         {error && <p style={{ color: 'red', marginTop: '12px' }}>{error}</p>}
 
         <div style={{ marginTop: '16px' }}>
-          {conversations.map(conversation => (
-            <button
-              key={conversation.id}
-              onClick={() => void openConversation(conversation.id)}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                marginBottom: '8px',
-                padding: '12px',
-                border:
-                  conversation.id === activeConversationId
-                    ? '2px solid black'
-                    : '1px solid #ccc',
-                background: 'white',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ fontSize: '14px', marginBottom: '4px' }}>
-                {conversation.targetUserName}
-              </div>
+          {conversations.map(conversation => {
+            const isOnline = onlineUserIds.includes(conversation.targetUserId)
 
-              <div style={{ fontSize: '13px', color: '#555' }}>
-                {conversation.lastMessage || 'No messages yet'}
-              </div>
+            return (
+              <button
+                key={conversation.id}
+                onClick={() => void openConversation(conversation.id)}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'left',
+                  marginBottom: '8px',
+                  padding: '12px',
+                  border:
+                    conversation.id === activeConversationId
+                      ? '2px solid black'
+                      : '1px solid #ccc',
+                  background: 'white',
+                  cursor: 'pointer',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    marginBottom: '4px',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      backgroundColor: isOnline ? '#22c55e' : '#9ca3af',
+                      display: 'inline-block',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span>{conversation.targetUserName}</span>
+                </div>
 
-              <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                unread: {conversation.unreadCount}
-              </div>
-            </button>
-          ))}
+                <div style={{ fontSize: '13px', color: '#555' }}>
+                  {conversation.lastMessage || 'No messages yet'}
+                </div>
+
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                  unread: {conversation.unreadCount}
+                </div>
+              </button>
+            )
+          })}
         </div>
       </aside>
 

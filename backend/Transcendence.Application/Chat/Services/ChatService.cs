@@ -7,6 +7,8 @@ using Transcendence.Domain.Exceptions;
 using Transcendence.Domain.Users;
 using Transcendence.Application.Common.Responses;
 using Transcendence.Application.Users.Interfaces;
+using Transcendence.Application.Realtime.Contracts;
+
 namespace Transcendence.Application.Chat.Services;
 
 public class ChatService : IChatService
@@ -25,8 +27,6 @@ public class ChatService : IChatService
         _coversationRepository = conversationRepository;
         _messageRepository = messageRepository;
         _userRepository = userRepository;
-
-
     }
 
     private ChatMessageDto MapToDto(Message message, Guid currentUserId, DateTimeOffset readByUser,  DateTimeOffset readByOthers)
@@ -94,22 +94,32 @@ public class ChatService : IChatService
         return MapToDto(message, senderId,  readTime.ByMe, readTime.ByOthers);
     }
 
-    public async Task <Guid> CreateOrGetDirectConversationAsync(
-        Guid userA, Guid userB
-        )
+    public async Task<CreateOrGetConversationResult> CreateOrGetDirectConversationAsync(Guid userA, Guid userB)
     {
-        if (userA ==  userB)
+        if (userA == userB)
             throw new DomainValidationException("Cannot write to himself");
+
         var existing = await _coversationRepository.GetDirectConversation(userA, userB);
         if (existing is not null)
-            return existing.Id; 
+        {
+            return new CreateOrGetConversationResult
+            {
+                ConversationId = existing.Id,
+                IsCreated = false
+            };
+        }
 
-        var conversation = new Conversation(type: ConversationType.Direct, new[] { userA, userB});
-        
+        var conversation = new Conversation(type: ConversationType.Direct, new[] { userA, userB });
+
         await _coversationRepository.AddAsync(conversation);
         await _coversationRepository.SaveChangesAsync();
+        
 
-        return conversation.Id;
+        return new CreateOrGetConversationResult
+        {
+            ConversationId = conversation.Id,
+            IsCreated = true
+        };
     }
 
     
@@ -169,6 +179,8 @@ public class ChatService : IChatService
     public async Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId)
 {
     var conversations = await _coversationRepository.GetConversations(userId);
+    conversations = conversations.Where(c => c.LastMessageAt != null).ToList();
+    
 
     var targetUserIds = conversations
         .Select(c => c.Participants.First(p => p.UserId != userId).UserId)
@@ -190,7 +202,7 @@ public class ChatService : IChatService
             {
                 Id = c.Id,
                 TargetUserId = targetUserId,
-                TargetUserName = targetUser?.Username ?? targetUserId.ToString()[..8],
+                TargetUserName = targetUser?.Username ?? targetUserId.ToString()[..8], //
                 TargetUserAvatarUrl = targetUser?.AvatarFileId.HasValue == true
                     ? "/files/" + targetUser.AvatarFileId.Value
                     : null,

@@ -22,7 +22,7 @@ function NavItem({ to, label }: { to: string; label: string }) {
 }
 
 export function Header({ showNotification = true }: HeaderProps) {
-  const [hasNotifications] = useState(true)
+  const [hasNotifications] = useState(false)
   const { t, i18n } = useTranslation()
   const { isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()

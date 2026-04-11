@@ -9,4 +9,5 @@ public interface INotificationService
             ChatMessageDto message
  
             );
+        Task NotifyConversationCreated(Guid userA, Guid userB, Guid conversationId);
 } //class Transcendence.Application.Chat.DTOs.ChatMessageDto
