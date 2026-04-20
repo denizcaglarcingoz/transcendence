@@ -9,6 +9,30 @@ interface HeaderProps {
   showNotification?: boolean
 }
 
+function playSystemBeep() {
+  try {
+    const audioContext = new AudioContext()
+    const oscillator = audioContext.createOscillator()
+    const gain = audioContext.createGain()
+
+    oscillator.type = 'sine'
+    oscillator.frequency.value = 880
+    gain.gain.value = 0.05
+
+    oscillator.connect(gain)
+    gain.connect(audioContext.destination)
+
+    oscillator.start()
+
+    setTimeout(() => {
+      oscillator.stop()
+      void audioContext.close()
+    }, 120)
+  } catch (err) {
+    console.error('Failed to play sound', err)
+  }
+}
+
 function NavItem({ to, label }: { to: string; label: string }) {
   return (
     <NavLink

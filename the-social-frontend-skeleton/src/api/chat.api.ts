@@ -1,4 +1,7 @@
 import * as signalR from '@microsoft/signalr'
+import type {   CursorPageDto, OtherProfileDto  } from '../types/api'
+import api from './axios'
+
 
 export type ChatMessageDto = {
   messageId: string
@@ -48,12 +51,12 @@ export type CreateOrGetConversationResult = {
   isCreated: boolean
 }
 
-
 type ApiResponse<T> = {
   data: T
 }
 
-const API_BASE_URL = 'http://localhost:5067'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const HUB_BASE_URL = import.meta.env.VITE_HUB_BASE_URL || ''
 
 async function apiFetch<T>(
   userId: string,
@@ -105,7 +108,7 @@ export async function getMessages(
 }
 
 export function createChatConnection(userId: string) {
-  const hubUrl = `${API_BASE_URL}/hubs/chat?devUserId=${encodeURIComponent(userId)}`
+  const hubUrl = `${HUB_BASE_URL}/hubs/chat?devUserId=${encodeURIComponent(userId)}`
 
   return new signalR.HubConnectionBuilder()
     .withUrl(hubUrl)
@@ -174,4 +177,25 @@ export async function markAsDelivered(
   }
 
   await connection.invoke('DeliveredMessage', messageId, conversationId, senderId)
+}
+// export async function searchUsers(userId: string, query: string) {
+//   const encodedQuery = encodeURIComponent(query.trim());
+  
+//   const url = `${API_BASE_URL}/pro/search?query=${encodedQuery}&take=20`;
+
+//   return apiFetch<OtherProfileDto[]>(userId, url);
+// }
+// В файле с API
+export async function searchUsers(request: {
+  query: string
+  take: number
+  cursor: string | null
+}): Promise<OtherProfileDto[]> { // Возвращаем массив для удобства компонента
+
+  const { data } = await api.get<CursorPageDto<OtherProfileDto>>('/profile/search', {
+    params: request,
+  })
+
+  // Возвращаем именно поле items, так как в нем лежит массив пользователей
+  return data.items 
 }

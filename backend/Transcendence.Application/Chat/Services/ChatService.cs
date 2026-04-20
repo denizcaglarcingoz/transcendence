@@ -180,7 +180,7 @@ public class ChatService : IChatService
 public async Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId)
 {
     var conversations = await _coversationRepository.GetConversations(userId);
-    conversations = conversations.Where(c => c.LastMessageAt != null).ToList();
+    // conversations = conversations.Where(c => c.LastMessageAt != null).ToList();
 
     var targetUserIds = conversations
         .Select(c => c.Participants.First(p => p.UserId != userId).UserId)
@@ -192,7 +192,7 @@ public async Task<IReadOnlyList<ConversationDto>> GetConversations(Guid userId)
 
     var dtos = new List<ConversationDto>();
 
-    foreach (var c in conversations.OrderByDescending(c => c.LastMessageAt))
+    foreach (var c in conversations.OrderByDescending(c => c.LastMessageAt ?? DateTime.MinValue))
     {
         var targetUserId = c.Participants.First(p => p.UserId != userId).UserId;
         var myParticipant = c.Participants.First(p => p.UserId == userId);
