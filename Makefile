@@ -1,6 +1,6 @@
 COMPOSE = docker compose
 
-.PHONY: all up down build clean fclean re env certs backup-db restore-db
+.PHONY: all up down build clean fclean re env certs backup-db restore-db db-up app-up restore-up
 
 all: up
 
@@ -33,3 +33,12 @@ backup-db:
 
 restore-db:
 	sh docker/scripts/restore-db.sh
+
+db-up: env
+	$(COMPOSE) up -d db
+
+app-up: env certs
+	$(COMPOSE) up --build -d api nginx
+
+restore-up: env certs db-up restore-db
+	$(COMPOSE) up --build -d api nginx
