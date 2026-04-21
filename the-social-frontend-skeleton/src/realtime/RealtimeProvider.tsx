@@ -12,13 +12,13 @@ type RealtimeContextValue = {
 const RealtimeContext = createContext<RealtimeContextValue>({
   connection: null,
   isConnected: false,
-})
+})  
 
 export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const currentUserId = user?.id ?? null
 
-  const connectionRef = useRef<HubConnection | null>(null)
+  const connectionRef = useRef<HubConnection | null>(null)  
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
