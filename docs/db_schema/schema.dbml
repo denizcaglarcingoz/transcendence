@@ -25,8 +25,8 @@ Table app.users {
 
 Table app.files {
   Id uuid [pk]
-  ContentType varchar(100) [not null]
   OwnerId uuid [not null]
+  ContentType varchar(100) [not null]
   SizeBytes bigint [not null]
   StoragePath varchar(500) [not null, unique]
   UploadedAtUtc timestamptz [not null]
