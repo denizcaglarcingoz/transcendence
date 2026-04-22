@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { RequireAuth } from '../auth/RequireAuth'
+import { useAuth } from '../auth/AuthContext'
 import { Layout } from '../components/Layout'
 import { RealtimeProvider } from '../realtime/RealtimeProvider'
 import { AuthPage } from '../pages/AuthPage'
@@ -16,6 +17,12 @@ import { TermsOfServicePage} from '../pages/TermsOfServicePage'
 // import { PostDetailPage} from '../pages/PostDetailPage'
 //import { SearchPage } from '../pages/SearchPage'
 
+function RootRedirect() {
+  const { isAuthenticated } = useAuth()
+
+  return <Navigate to={isAuthenticated ? '/feed' : '/signin'} replace />
+}
+
 export const router = createBrowserRouter([
   { path: '/signin', element: <AuthPage /> },
   { path: '/terms-service', element: <TermsOfServicePage /> },
@@ -24,7 +31,7 @@ export const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: '/', element: <Navigate to="/feed" replace /> },
+      { path: '/', element: <RootRedirect /> },
       { path: '/signin', element: <AuthPage /> },
       {
         element: <RequireAuth />,
