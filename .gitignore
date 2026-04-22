@@ -13,6 +13,15 @@ obj/
 .vscode/
 .obsidian/
 .idea/
+#.vs/
+#backend/.vs/
+
+# Copilot-generated local caches/sessions
+#**/CopilotSnapshots/
+#**/CopilotIndices/
+#**/copilot-chat/
+#**/SemanticSymbols.db
+#**/state.mpack
 
 *.log
 *.cache

@@ -19,6 +19,8 @@ clean:
 fclean:
 	$(COMPOSE) down -v --remove-orphans
 	rm -f docker/nginx/certs/dev.crt docker/nginx/certs/dev.key
+	rm -rf uploads/*
+	mkdir -p uploads
 
 re: clean up #not fclean to keep db
 
