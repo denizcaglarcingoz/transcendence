@@ -33,7 +33,7 @@ services:
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__ExpiryMinutes: ${JWT_EXPIRY_MINUTES}
-      GoogleAuth_ClientId: ${GOOGLE_CLIENTID}
+      GoogleAuth__ClientId: ${GOOGLE_CLIENTID}
     depends_on:
       db:
         condition: service_healthy
