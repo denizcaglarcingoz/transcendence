@@ -56,3 +56,5 @@ docker/nginx/certs/*
 
 backups/*
 !backups/.gitkeep
+
+*.tsbuildinfo
