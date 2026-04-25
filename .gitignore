@@ -11,8 +11,18 @@ obj/
 # Rider / VS Code
 .idea/
 .vscode/
+.vs/
 .obsidian/
 .idea/
+#.vs/
+backend/.vs/
+
+# Copilot-generated local caches/sessions
+#**/CopilotSnapshots/
+#**/CopilotIndices/
+#**/copilot-chat/
+#**/SemanticSymbols.db
+#**/state.mpack
 
 *.log
 *.cache
@@ -23,7 +33,7 @@ packages/
 *.snupkg
 
 .env
-.env.*
+
 appsettings.Development.json
 appsettings.Local.json
 
@@ -35,7 +45,16 @@ TestResults/
 node_modules/
 dist/
 build/
+uploads/
 
 *.swp
 *.bak
 *.md
+
+docker/nginx/certs/*
+!docker/nginx/certs/.gitkeep
+
+backups/*
+!backups/.gitkeep
+
+*.tsbuildinfo

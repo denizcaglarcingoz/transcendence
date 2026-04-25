@@ -14,7 +14,7 @@ public class Notification
     public string? ActorUsername { get; private set; }
     public string? ActorAvatarUrl { get; private set; }
 
-    public bool IsRead { get; private set; }
+    public bool IsRead { get;  set; }
     public DateTime CreatedAt { get; private set; }
 
     private Notification() { }

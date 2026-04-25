@@ -95,58 +95,55 @@ export function Header({ showNotification = true }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [notifications, setNotifications] = useState<UiNotification[]>([])
-  const [activeChatConversationId, setActiveChatConversationId] = useState<string | null>(null)
+
   const activeChatConversationIdRef = useRef<string | null>(null)
-  const readConversationIdsRef = useRef<Set<string>>(new Set())
+
   const { user } = useAuth()
   const { connection, isConnected } = useRealtime()
 
   const currentUserId = user?.id ?? null
 
-async function loadHeaderSummary() {
-  if (!currentUserId) return
+  async function loadHeaderSummary() {
+    if (!currentUserId) return
 
-  try {
-    const list = await getNotifications()
-  const visibleUnreadCount = list.filter(item => {
-    const isRead = item.isRead
+    try {
+      const list = await getNotifications()
+      const activeConversationId = activeChatConversationIdRef.current
 
-    const isAlreadyOpenedChatNotification =
-      item.type === NotificationType.NewMessage &&
-      item.relatedConversationId &&
-      readConversationIdsRef.current.has(item.relatedConversationId)
+      const visibleUnreadCount = list.filter(item => {
+        const isActiveChatNotification =
+          item.type === NotificationType.NewMessage &&
+          item.relatedConversationId === activeConversationId
 
-    return !isRead && !isAlreadyOpenedChatNotification
-  }).length
+        return !item.isRead && !isActiveChatNotification
+      }).length
 
-    setUnreadCount(visibleUnreadCount)
-  } catch (err) {
-    console.error('Failed to load header summary', err)
+      setUnreadCount(visibleUnreadCount)
+    } catch (err) {
+      console.error('Failed to load header summary', err)
+    }
   }
-}
 
-async function loadNotifications() {
-  if (!currentUserId) return
+  async function loadNotifications() {
+    if (!currentUserId) return
 
-  try {
-    const list = await getNotifications()
-const filtered = list.filter(item => {
-  const isRead = item.isRead
+    try {
+      const list = await getNotifications()
+      const activeConversationId = activeChatConversationIdRef.current
 
-  const isAlreadyOpenedChatNotification =
-    item.type === NotificationType.NewMessage &&
-    item.relatedConversationId &&
-    readConversationIdsRef.current.has(item.relatedConversationId)
+      const visibleNotifications = list.filter(item => {
+        const isActiveChatNotification =
+          item.type === NotificationType.NewMessage &&
+          item.relatedConversationId === activeConversationId
 
-  return !isRead && !isAlreadyOpenedChatNotification
-}) 
- 
+        return !item.isRead && !isActiveChatNotification
+      })
 
-    setNotifications(filtered.map(toUiNotification))
-  } catch (err) {
-    console.error('Failed to load notifications', err)
+      setNotifications(visibleNotifications.map(toUiNotification))
+    } catch (err) {
+      console.error('Failed to load notifications', err)
+    }
   }
-}
 
   async function refreshNotificationsUi() {
     await loadHeaderSummary()
@@ -167,9 +164,10 @@ const filtered = list.filter(item => {
       await markAllNotificationsAsRead()
       setNotifications([])
       setUnreadCount(0)
-      setIsNotificationsOpen(false)
     } catch (err) {
       console.error('Failed to mark notifications as read', err)
+    } finally {
+      setIsNotificationsOpen(false)
     }
   }
 
@@ -198,28 +196,21 @@ const filtered = list.filter(item => {
       console.error('Failed to decline friend request', err)
     }
   }
- 
-useEffect(() => {
-  function handleActiveChatChanged(event: Event) {
-    const customEvent = event as CustomEvent<{ conversationId: string | null }>
-    const conversationId = customEvent.detail?.conversationId ?? null
 
-  activeChatConversationIdRef.current = conversationId
-  setActiveChatConversationId(conversationId)
+  useEffect(() => {
+    function handleActiveChatChanged(event: Event) {
+      const customEvent = event as CustomEvent<{ conversationId: string | null }>
+      activeChatConversationIdRef.current = customEvent.detail?.conversationId ?? null
 
-  if (conversationId) {
-    readConversationIdsRef.current.add(conversationId)
-  }
+      void refreshNotificationsUi()
+    }
 
-void refreshNotificationsUi()
-  }
+    window.addEventListener('active-chat-changed', handleActiveChatChanged)
 
-  window.addEventListener('active-chat-changed', handleActiveChatChanged)
-
-  return () => {
-    window.removeEventListener('active-chat-changed', handleActiveChatChanged)
-  }
-}, []) 
+    return () => {
+      window.removeEventListener('active-chat-changed', handleActiveChatChanged)
+    }
+  }, [currentUserId, isNotificationsOpen])
 
   useEffect(() => {
     function handleNotificationsVisualRefresh() {
@@ -231,7 +222,7 @@ void refreshNotificationsUi()
     return () => {
       window.removeEventListener('notifications-visual-refresh', handleNotificationsVisualRefresh)
     }
-  }, [isNotificationsOpen, activeChatConversationId, currentUserId])
+  }, [currentUserId, isNotificationsOpen])
 
   useEffect(() => {
     if (!currentUserId) return
@@ -239,19 +230,16 @@ void refreshNotificationsUi()
   }, [currentUserId])
 
   useEffect(() => {
-    if (!currentUserId) return
-    void refreshNotificationsUi()
-  }, [activeChatConversationId])
-
-  useEffect(() => {
     if (!connection || !currentUserId || !isConnected) return
 
     const handleNotificationReceived = (notification: RealtimeNotificationDto) => {
       if (notification.type === NotificationType.NewMessage) {
         const payload = notification.payload as ChatMessageDto
-        const isMyOwnMessage = payload.senderId === currentUserId
-        const isActiveChatMessage = payload.conversationId === activeChatConversationIdRef.current
-        if (isMyOwnMessage) return
+
+        if (payload.senderId === currentUserId) return
+
+        const isActiveChatMessage =
+          payload.conversationId === activeChatConversationIdRef.current
 
         if (isActiveChatMessage) {
           void refreshNotificationsUi()
@@ -280,7 +268,7 @@ void refreshNotificationsUi()
       connection.off('NotificationsChanged', handleNotificationsChanged)
       connection.off('ConversationsChanged', handleConversationsChanged)
     }
-  }, [connection, currentUserId, isConnected, isNotificationsOpen, activeChatConversationId])
+  }, [connection, currentUserId, isConnected, isNotificationsOpen])
 
   const hasNotifications = unreadCount > 0
 
@@ -300,6 +288,7 @@ void refreshNotificationsUi()
                 className="relative rounded-full p-2 transition-colors hover:bg-gray-100"
               >
                 <BellIcon className="h-6 w-6 text-gray-700" />
+
                 {hasNotifications && (
                   <>
                     <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500" />
@@ -355,7 +344,6 @@ function BellIcon({ className }: { className?: string }) {
     </svg>
   )
 }
-
 export function TheSocialLogo({ className }: { className?: string }) {
   return (
     <svg

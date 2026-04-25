@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { useRealtime } from '../realtime/RealtimeProvider'
+import { useTranslation } from 'react-i18next'
+import { BottomNav } from '../components/BottomNav'
+import { markConversationNotificationsAsRead } from '../api/notifications.api'
 
 import {
   createDirectConversation,
   getConversations,
   getMessages,
   joinConversation,
-  leaveConversation,
+  // leaveConversation,
   markAsRead,
   markAsDelivered,
   sendMessage,
@@ -55,23 +58,10 @@ export function ChatPage() {
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false)
 
   const messagesContainerRef = useRef<HTMLDivElement | null>(null)
+  const [draftTargetUserId, setDraftTargetUserId] = useState<string | null>(null)
+  const [draftTargetUserName, setDraftTargetUserName] = useState<string | null>(null)
   
-  async function handleCreateDirectConversationFromSearch(targetUserId: string) {
-    if (!currentUserId) return
-
-    try {
-      const result = await createDirectConversation(currentUserId, targetUserId)
-
-      setSearch('')
-      setSearchResults([])
-
-      await loadConversations()
-      await openConversation(result.conversationId)
-    } catch (err) {
-      console.error('Failed to create chat', err)
-    }
-  }
-
+ 
   async function loadConversations() {
     if (!currentUserId) return []
 
@@ -178,11 +168,16 @@ async function openConversation(conversationId: string) {
     if (!connection) {
       throw new Error('Chat connection is not initialized')
     }
-
+    
+    setDraftTargetUserId(null)
+    setDraftTargetUserName(null)
+ 
     activeConversationIdRef.current = conversationId
     setActiveConversationId(conversationId)
     setMessages([])
     setDeliveredMessageIds([])
+    setMessagesOffset(0)
+    setHasMoreMessages(true)
 
     window.dispatchEvent(
       new CustomEvent('active-chat-changed', {
@@ -195,6 +190,8 @@ async function openConversation(conversationId: string) {
 
     if (!document.hidden) {
       await markAsRead(connection, conversationId)
+      await markConversationNotificationsAsRead(conversationId)
+      window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
       await loadConversations()
       window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
     }
@@ -202,23 +199,37 @@ async function openConversation(conversationId: string) {
     setError(err instanceof Error ? err.message : 'Failed to open conversation')
   }
 }
-  async function handleSend() {
-    if (!connection) return
-    if (!activeConversationId) return
-    if (!text.trim()) return
-    if (!currentUserId) return
+ async function handleSend() {
+  if (!connection) return
+  if (!text.trim()) return
+  if (!currentUserId) return
 
+  let conversationId = activeConversationId
+
+  try {
     setSending(true)
     setError(null)
+
+    if (!conversationId) {
+      if (!draftTargetUserId) return
+
+      const result = await createDirectConversation(currentUserId, draftTargetUserId)
+      conversationId = result.conversationId
+      activeConversationIdRef.current = conversationId
+      setActiveConversationId(conversationId)
+      setDraftTargetUserId(null)
+      setDraftTargetUserName(null)
+
+      await joinConversation(connection, conversationId)
+    }
 
     const trimmedText = text.trim()
     const clientMessageId = crypto.randomUUID()
 
-
     const optimisticMessage: ChatMessageDto = {
       messageId: clientMessageId,
       clientMessageId,
-      conversationId: activeConversationId,
+      conversationId,
       senderId: currentUserId,
       content: trimmedText,
       createdAt: new Date().toISOString(),
@@ -226,27 +237,23 @@ async function openConversation(conversationId: string) {
       isReadByOthers: false,
     }
 
-    
     shouldScrollToBottomRef.current = true
     setMessages(prev => [...prev, optimisticMessage])
     setText('')
 
-    try {
-      await sendMessage(connection, {
-        conversationId: activeConversationId,
-        clientMessageId,
-        content: trimmedText,
-      })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send message')
+    await sendMessage(connection, {
+      conversationId,
+      clientMessageId,
+      content: trimmedText,
+    })
 
-      setMessages(prev =>
-        prev.filter(message => message.clientMessageId !== clientMessageId)
-      )
-    } finally {
-      setSending(false)
-    }
+    await loadConversations()
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Failed to send message')
+  } finally {
+    setSending(false)
   }
+}
 
 async function syncActiveConversationReadState() {
   if (!connection) return
@@ -357,10 +364,11 @@ useEffect(() => {
       if (isActive && !document.hidden) {
         void markAsRead(connection, message.conversationId)
           .then(async () => {
+            await markConversationNotificationsAsRead(message.conversationId)
             await reloadConversations()
             window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
           })
-          .catch(err => console.error('Failed to mark as read after receiving message', err))
+        .catch(err => console.error('Failed to mark as read after receiving message', err))
       } else {
         void reloadConversations()
       }
@@ -436,6 +444,22 @@ const handleMessageDelivered = (payload: MessageDeliveredDto) => {
     }
   }, [connection, currentUserId])
 
+function openDraftConversation(targetUserId: string, username: string) {
+  activeConversationIdRef.current = null
+  setActiveConversationId(null)
+
+  setDraftTargetUserId(targetUserId)
+  setDraftTargetUserName(username)
+
+  setMessages([])
+  setDeliveredMessageIds([])
+  setMessagesOffset(0)
+  setHasMoreMessages(false)
+
+  setSearch('')
+  setSearchResults([])
+}
+
   useEffect(() => {
     if (!currentUserId || !connection || !isConnected) return
 
@@ -466,7 +490,6 @@ const handleMessageDelivered = (payload: MessageDeliveredDto) => {
     }
 
     void init()
-
     return () => {
       isMounted = false
     }
@@ -511,223 +534,256 @@ useEffect(() => {
         })
       )
     }
-  }, [])
+  }, [])  
+  const { t } = useTranslation()
+const isDraftTargetOnline =
+  draftTargetUserId !== null && onlineUserIds.includes(draftTargetUserId)
+return (
+  
+  <div className="flex h-[calc(100dvh-250px)] items-center justify-center bg-white p-4">
+    <div className="mx-auto h-full w-full max-w-8xl py-6">
+      <div className="panel flex h-[85%] w-full gap-4">
+        <aside className="w-l bg-gray-300 rounded-2xl flex flex-col p-3">
+          <h2 className="text-base font-bold text-text mb-2">
+            {t('chat.chats')}
+          </h2>
 
-  return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <aside
-        style={{
-          width: '320px',
-          borderRight: '1px solid #ddd',
-          padding: '16px',
-          overflowY: 'auto',
-        }}
-      >
-        <h2>Chats</h2>
+          <div className="relative mb-2">
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={t('chat.searchUsers')}
+              className="input w-full text-xs"
+            />
 
-        <div style={{ marginBottom: '12px', position: 'relative' }}>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search users..."
-            style={{
-              width: '100%',
-              padding: '10px',
-              border: '1px solid #ccc',
-              borderRadius: '8px',
-            }}
-          />
-
-          {searchResults.length > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 10,
-                background: 'white',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                maxHeight: '200px',
-                overflowY: 'auto',
-              }}
-            >
-              {searchResults.map(userItem => (
-                <button
-                  key={userItem.id}
-                  onClick={() => void handleCreateDirectConversationFromSearch(userItem.id)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '10px',
-                    border: 'none',
-                    borderBottom: '1px solid #eee',
-                    background: 'white',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {userItem.username}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {error && <p style={{ color: 'red', marginTop: '12px' }}>{error}</p>}
-
-        <div style={{ marginTop: '16px' }}>
-          {conversations.map(conversation => {
-            const isOnline = onlineUserIds.includes(conversation.targetUserId)
-
-            return (
-              <button
-                key={conversation.id}
-                onClick={() => void openConversation(conversation.id)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'left',
-                  marginBottom: '8px',
-                  padding: '12px',
-                  border:
-                    conversation.id === activeConversationId
-                      ? '2px solid black'
-                      : '1px solid #ccc',
-                  background: 'white',
-                  cursor: 'pointer',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '14px',
-                    marginBottom: '4px',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      backgroundColor: isOnline ? '#22c55e' : '#9ca3af',
-                      display: 'inline-block',
-                      flexShrink: 0,
+            {searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-lg max-h-32 overflow-y-auto">
+                {searchResults.map(userItem => (
+                  <button
+                    key={userItem.id}
+                    type="button"
+                    onMouseDown={e => {
+                      e.preventDefault()
+                      openDraftConversation(userItem.id, userItem.username)
                     }}
-                  />
-                  <span>{conversation.targetUserName}</span>
-                </div>
-
-                <div style={{ fontSize: '13px', color: '#555' }}>
-                  {conversation.lastMessage || 'No messages yet'}
-                </div>
-
-                <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                  unread: {conversation.unreadCount}
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </aside>
-
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div
-          ref={messagesContainerRef}
-          style={{
-            flex: 1,
-            padding: '16px',
-            overflowY: 'auto',
-            background: '#fafafa',
-          }}
-        >
-          {!activeConversationId && <p>Select a conversation</p>}
-          {loadingMessages && <p>Loading messages...</p>}
-
-        {loadingOlderMessages && (
-          <p style={{ textAlign: 'center', color: '#888', marginBottom: '12px' }}>
-            Loading older messages...
-          </p>
-        )}
-        
-          {!loadingMessages &&
-            messages.map(message => {
-              const isMine = message.senderId === currentUserId
-
-              return (
-                <div
-                  key={message.messageId}
-                  style={{
-                    display: 'flex',
-                    justifyContent: isMine ? 'flex-end' : 'flex-start',
-                    marginBottom: '10px',
-                  }}
-                >
-                  <div
-                    style={{
-                      maxWidth: '70%',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid #ddd',
-                      background: 'white',
-                    }}
+                    className="block w-full text-left px-2 py-1 border-b border-gray-100 hover:bg-gray-100 transition-colors text-xs"
                   >
-                    <div>{message.content}</div>
+                    <div className="font-medium text-gray-900">
+                      {userItem.username}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-                    <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
-                      {new Date(message.createdAt).toLocaleString()}
+          {error && (
+            <p className="text-red-500 text-xs mb-2">
+              {error}
+            </p>
+          )}
+
+          <div className="space-y-0.5 flex-1 min-h-0 overflow-y-auto">
+
+            {draftTargetUserId && (
+              <button
+                type="button"
+                className="w-full text-left p-1.5 rounded-lg transition-all bg-gray-400 border border-gray-500 mb-0.5"
+              >
+                <div className="flex items-center gap-1.5">
+                  <img
+                    src="https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg"
+                    alt={draftTargetUserName ?? 'New chat'}
+                    className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 truncate text-xs">
+                      {draftTargetUserName}
                     </div>
 
-                    {isMine && (
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
-                        {message.isReadByOthers
-                          ? 'Read'
-                          : deliveredMessageIds.includes(message.messageId)
-                            ? 'Delivered'
-                            : 'Sent'}
-                      </div>
-                    )}
+                    <div className="text-xs text-gray-600 truncate">
+                      New chat
+                    </div>
                   </div>
+
+                 <span
+                    className={`inline-block w-2.5 h-2.5 rounded-full ring-1 ring-gray-300 ${
+                      isDraftTargetOnline ? 'bg-green-500' : 'bg-gray-400'
+                    }`}
+                  />
                 </div>
-              )
-            })}
+              </button>
+            )}
 
-          <div ref={messagesEndRef} />
-        </div>
+            {conversations.length === 0 && !draftTargetUserId ? (
+              <p className="text-gray-600 text-center py-2 text-xs">
+                {t('chat.selectConversation')}
+              </p>
+            ) : (
+              conversations.map(conversation => {
+                const isOnline = onlineUserIds.includes(conversation.targetUserId)
 
-        <div
-          style={{
-            padding: '16px',
-            borderTop: '1px solid #ddd',
-            display: 'flex',
-            gap: '8px',
-          }}
-        >
-        <input
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              void handleSend()
-            }
-          }}
-          placeholder="Type a message..."
-          style={{ flex: 1, padding: '10px' }}
-        />
+                const avatarSrc = conversation.targetUserAvatarUrl
+                  ? `${import.meta.env.VITE_API_BASE_URL}${conversation.targetUserAvatarUrl}`
+                  : 'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'
 
-          <button
-            onClick={() => void handleSend()}
-            disabled={sending || !text.trim() || !currentUserId}
+                return (
+                  <button
+                    key={conversation.id}
+                    onClick={() => void openConversation(conversation.id)}
+                    className={`w-full text-left p-1.5 rounded-lg transition-all ${
+                      conversation.id === activeConversationId
+                        ? 'bg-gray-400 border border-gray-500'
+                        : 'bg-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <img
+                        src={avatarSrc}
+                        onError={event => {
+                          event.currentTarget.src =
+                            'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'
+                        }}
+                        alt={conversation.targetUserName}
+                        className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                      />
+
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate text-xs">
+                          {conversation.targetUserName}
+                        </div>
+
+                        <div className="text-xs text-gray-600 truncate">
+                          {conversation.lastMessage || t('chat.noMessagesYet')}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {conversation.unreadCount > 0 && (
+                          <span className="min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                            {conversation.unreadCount}
+                          </span>
+                        )}
+
+                        <span
+                          className={`inline-block w-2.5 h-2.5 rounded-full ring-1 ring-gray-300 ${
+                            isOnline ? 'bg-green-500' : 'bg-gray-400'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </aside>
+
+        <main className="flex-1 flex flex-col bg-gray-300 rounded-2xl p-3 min-h-0">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-2 space-y-0.5 min-h-0 bg-white rounded-lg mb-1.5"
           >
-            {sending ? 'Sending...' : 'Send'}
-          </button>
-        </div>
-      </main>
+              {!activeConversationId && !draftTargetUserId && !loadingMessages && (
+                <div className="text-center py-2 text-gray-500 text-xs">
+                  {t('chat.selectConversation')}
+                </div>
+              )}
+
+              {draftTargetUserId && (
+                <div className="text-center py-2 text-gray-500 text-xs">
+                  New chat with {draftTargetUserName}
+                </div>
+              )}
+
+            {loadingMessages && (
+              <div className="text-center py-2 text-gray-500 text-xs">
+                {t('chat.loadingMessages')}
+              </div>
+            )}
+
+            {loadingOlderMessages && (
+              <div className="text-center py-2 text-gray-500 text-xs">
+                {t('chat.loadingMessages')}
+              </div>
+            )}
+
+            {!loadingMessages &&
+              messages.map(message => {
+                const isMine = message.senderId === currentUserId
+
+                return (
+                  <div
+                    key={message.messageId}
+                    className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-xs px-1.5 py-0.5 rounded-lg text-xs ${
+                        isMine
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 text-gray-900'
+                      }`}
+                    >
+                      <div>{message.content}</div>
+
+                      <div
+                        className={`text-xs mt-0.5 ${
+                          isMine ? 'text-blue-100' : 'text-gray-600'
+                        }`}
+                      >
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+
+                      {isMine && (
+                        <div className="text-xs mt-0.5 text-blue-100">
+                          {message.isReadByOthers
+                            ? t('chat.read')
+                            : deliveredMessageIds.includes(message.messageId)
+                              ? t('chat.delivered')
+                              : t('chat.sent')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="bg-white rounded-lg p-1.5 flex-shrink-0">
+            <div className="flex gap-1">
+              <input
+                value={text}
+                onChange={e => setText(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    void handleSend()
+                  }
+                }}
+                placeholder={t('chat.typeMessage')}
+                className="input flex-1 text-xs"
+              />
+
+              <button
+                onClick={() => void handleSend()}
+                disabled={sending || !text.trim() || !currentUserId}
+                className="btn-primary px-2 py-1 text-xs disabled:opacity-50"
+              >
+                {sending ? t('common.loading') : t('chat.send')}
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <BottomNav active="messages" />
     </div>
-  )
+  </div>
+)
 }

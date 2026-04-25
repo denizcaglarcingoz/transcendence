@@ -8,4 +8,6 @@ public interface INotificationRepository
     Task<int> GetUnreadCountAsync(Guid userId, CancellationToken ct);
     Task MarkAllAsReadAsync(Guid userId, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
+    Task MarkConversationAsReadAsync(Guid userId, Guid conversationId, CancellationToken ct);
+    
 }

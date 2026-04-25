@@ -8,5 +8,5 @@ public interface INotificationsService
     Task<int> GetUnreadCountAsync(Guid userId, CancellationToken ct);
     Task MarkAllAsReadAsync(Guid userId, CancellationToken ct);
 
-
+    Task MarkConversationAsReadAsync(Guid userId, Guid conversationId, CancellationToken ct);
 }

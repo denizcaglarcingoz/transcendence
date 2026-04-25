@@ -200,21 +200,22 @@ public class NotificationService : INotificationService
     string? actorAvatarUrl = null,
     Guid? relatedConversationId = null,
     Guid? relatedRequestId = null)
-{
-    var notification = new Notification(
-        id: Guid.NewGuid(),
-        userId: userId,
-        type: (int)type,
-        text: text,
-        createdAt: DateTime.UtcNow,
-        actorUserId: actorUserId,
-        actorUsername: actorUsername,
-        actorAvatarUrl: actorAvatarUrl,
-        relatedConversationId: relatedConversationId,
-        relatedRequestId: relatedRequestId
-    );
+    {
+        var notification = new Notification(
+            id: Guid.NewGuid(),
+            userId: userId,
+            type: (int)type,
+            text: text,
+            createdAt: DateTime.UtcNow,
+            actorUserId: actorUserId,
+            actorUsername: actorUsername,
+            actorAvatarUrl: actorAvatarUrl,
+            relatedConversationId: relatedConversationId,
+            relatedRequestId: relatedRequestId
+        );
 
-    await _notificationRepository.AddAsync(notification, CancellationToken.None);
-    await _notificationRepository.SaveChangesAsync(CancellationToken.None);
-}
+        await _notificationRepository.AddAsync(notification, CancellationToken.None);
+        await _notificationRepository.SaveChangesAsync(CancellationToken.None);
+    }
+
 }

@@ -55,4 +55,14 @@ public sealed class NotificationsController : ControllerBase
 
         return userId;
     }
+    [HttpPost("conversations/{conversationId:guid}/read")]
+    public async Task<IActionResult> MarkConversationAsRead(Guid conversationId, CancellationToken ct)
+    {
+        var userId = GetUserId();
+
+        await _notificationsService.MarkConversationAsReadAsync(userId, conversationId, ct);
+
+        return NoContent();
+    }
+
 }

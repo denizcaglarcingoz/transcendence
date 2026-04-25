@@ -21,14 +21,19 @@ services:
     build:
       context: .
       dockerfile: backend/Transcendence.Api/Dockerfile
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     env_file: .env
     environment:
       ASPNETCORE_URLS: http://0.0.0.0:8080
       ASPNETCORE_ENVIRONMENT: Development
       STORAGE_ROOT_PATH: /app/uploads
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpiryMinutes: ${JWT_EXPIRY_MINUTES}
+      GoogleAuth__ClientId: ${GOOGLE_CLIENTID}
     depends_on:
       db:
         condition: service_healthy
@@ -40,8 +45,8 @@ services:
       context: .
       dockerfile: docker/nginx/Dockerfile
     ports:
-      - "8081:80"
-      - "8443:443"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./docker/nginx/certs:/etc/nginx/certs:ro
     depends_on:
@@ -49,4 +54,4 @@ services:
 
 volumes:
   pgdata:
-  uploads_data:
+  #uploads_data: //api bind mount can be changed later to a volume, for production

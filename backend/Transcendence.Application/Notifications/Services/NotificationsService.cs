@@ -43,101 +43,10 @@ public sealed class NotificationsService : INotificationsService
     {
         await _notificationRepository.MarkAllAsReadAsync(userId, ct);
         await _notificationRepository.SaveChangesAsync(ct);
-    }
-/*
-    public async Task CreateFriendRequestNotificationAsync(
-        Guid userId,
-        Guid actorUserId,
-        string actorUsername,
-        string? actorAvatarUrl,
-        Guid requestId,
-        CancellationToken ct)
-    {
-        var notification = new Notification(
-            Guid.NewGuid(),
-            userId,
-            (int)NotificationType.FriendRequest,
-            $"{actorUsername} sent you a friend request",
-            DateTime.UtcNow,
-            actorUserId,
-            actorUsername,
-            actorAvatarUrl,
-            relatedRequestId: requestId
-        );
-
-        await _notificationRepository.AddAsync(notification, ct);
-        await _notificationRepository.SaveChangesAsync(ct);
-    }
-
-    public async Task CreateFriendRequestAcceptedNotificationAsync(
-        Guid userId,
-        Guid actorUserId,
-        string actorUsername,
-        string? actorAvatarUrl,
-        Guid requestId,
-        CancellationToken ct)
-    {
-        var notification = new Notification(
-            Guid.NewGuid(),
-            userId,
-            (int)NotificationType.FriendRequestAccepted,
-            $"{actorUsername} accepted your friend request",
-            DateTime.UtcNow,
-            actorUserId,
-            actorUsername,
-            actorAvatarUrl,
-            relatedRequestId: requestId
-        );
-
-        await _notificationRepository.AddAsync(notification, ct);
-        await _notificationRepository.SaveChangesAsync(ct);
-    }
-
-    public async Task CreateFriendRequestDeclinedNotificationAsync(
-        Guid userId,
-        Guid actorUserId,
-        string actorUsername,
-        string? actorAvatarUrl,
-        Guid requestId,
-        CancellationToken ct)
-    {
-        var notification = new Notification(
-            Guid.NewGuid(),
-            userId,
-            (int)NotificationType.FriendRequestDeclined,
-            $"{actorUsername} declined your friend request",
-            DateTime.UtcNow,
-            actorUserId,
-            actorUsername,
-            actorAvatarUrl,
-            relatedRequestId: requestId
-        );
-
-        await _notificationRepository.AddAsync(notification, ct);
-        await _notificationRepository.SaveChangesAsync(ct);
-    }
-
-    public async Task CreateNewMessageNotificationAsync(
-        Guid userId,
-        Guid actorUserId,
-        string actorUsername,
-        string? actorAvatarUrl,
-        Guid conversationId,
-        CancellationToken ct)
-    {
-        var notification = new Notification(
-            Guid.NewGuid(),
-            userId,
-            (int)NotificationType.NewMessage,
-            $"{actorUsername} sent you a message",
-            DateTime.UtcNow,
-            actorUserId,
-            actorUsername,
-            actorAvatarUrl,
-            relatedConversationId: conversationId
-        );
-
-        await _notificationRepository.AddAsync(notification, ct);
-        await _notificationRepository.SaveChangesAsync(ct);
-    } */
+    } 
+    public async Task MarkConversationAsReadAsync(Guid userId, Guid conversationId, CancellationToken ct)
+{
+    await _notificationRepository.MarkConversationAsReadAsync(userId, conversationId, ct);
+    await _notificationRepository.SaveChangesAsync(ct);
+}
 }

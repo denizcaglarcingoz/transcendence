@@ -40,6 +40,10 @@ export async function getUnreadNotificationCount(): Promise<number> {
   return response.data.data
 }
 
+export async function markConversationNotificationsAsRead(conversationId: string): Promise<void> {
+  await api.post(`/notifications/conversations/${conversationId}/read`)
+}
+
 export async function markAllNotificationsAsRead(): Promise<void> {
   await api.post('/notifications/read-all')
 }

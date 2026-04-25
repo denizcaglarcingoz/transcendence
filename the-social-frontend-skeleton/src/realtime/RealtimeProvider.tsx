@@ -66,14 +66,23 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         setOnlineUserIds([])
       })
 
-      connection.onreconnected(() => {
-        setIsConnected(true)
-      })
+        connection.onreconnected(() => {
+
+          setIsConnected(true)
+          void connection.invoke('RequestPresenceSnapshot')
+            .catch(err => console.error('Failed to request presence snapshot after reconnect', err))
+
+        })
 
       try {
         await startConnection(connection)
         if (disposed) return
+
         setIsConnected(true)
+
+        await connection.invoke('RequestPresenceSnapshot')
+          .catch(err => console.error('Failed to request presence snapshot', err))
+
       } catch (err) {
         console.error('Failed to start realtime connection', err)
         setIsConnected(false)

@@ -44,7 +44,18 @@ public sealed class NotificationRepository : INotificationRepository
             notification.MarkAsRead();
         }
     }
+    public async Task MarkConversationAsReadAsync(Guid userId, Guid conversationId, CancellationToken ct)
+    {
+        var notifications = await _db.Notifications
+            .Where(n =>
+                n.UserId == userId &&
+                n.RelatedConversationId == conversationId &&
+                !n.IsRead)
+            .ToListAsync(ct);
 
+        foreach (var notification in notifications)
+            notification.IsRead = true;
+    }
     public async Task SaveChangesAsync(CancellationToken ct)
     {
         await _db.SaveChangesAsync(ct);
