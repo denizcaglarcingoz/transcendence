@@ -86,39 +86,53 @@ export function FriendsPage() {
             {friends.map((friend) => {
               const status = friendshipState[friend.id] ?? 'friends'
 
-              return (
-                <div
+                  return (
+                  <div
                   key={friend.id}
-                  className="flex items-center gap-4 rounded-2xl bg-gray-200 p-4"
-                >
-                  <img
-                    src={friend?.avatarUrl ? `${import.meta.env.VITE_API_BASE_URL}${friend.avatarUrl}` :'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/profile/${friend.id}`)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      navigate(`/profile/${friend.id}`)
+                    }
+                  }}
+                  className="flex cursor-pointer items-center gap-4 rounded-2xl bg-gray-100 p-4 hover:bg-gray-200"
+                  >
+                    <img
+                    src={
+                      friend?.avatarUrl
+                        ? `${import.meta.env.VITE_API_BASE_URL}${friend.avatarUrl}`
+                        : 'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'
+                    }
                     alt={friend.fullName}
                     className="h-14 w-14 rounded-full border-2 border-red-200 object-cover"
-                  />
-
-                  <div className="min-w-0 flex-1">
+                    />
+                    <div className="min-w-0 flex-1">
                     <div className="font-semibold text-gray-900">{friend.fullName}</div>
                     <div className="text-sm text-gray-500">@{friend.username}</div>
                   </div>
-
+                  
                   <button
                     type="button"
-                    onClick={() => toggleFriendship(friend.id)}
+                    onClick={e => {
+                      e.stopPropagation()
+                      toggleFriendship(friend.id)
+                    }}
                     disabled={status === 'requested'}
                     className={`rounded-full px-6 py-2 font-medium transition-colors ${
                       status === 'friends'
                         ? 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                         : status === 'requested'
-                        ? 'cursor-default bg-gray-200 text-yellow-800'
-                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                          ? 'cursor-default bg-gray-200 text-yellow-800'
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
                     }`}
                   >
-                     {status === 'friends'
+                    {status === 'friends'
                       ? t('friends.friends')
                       : status === 'requested'
-                      ? t('friends.requested')
-                      : t('friends.addFriend')} 
+                        ? t('friends.requested')
+                        : t('friends.addFriend')}
                   </button>
                 </div>
               )

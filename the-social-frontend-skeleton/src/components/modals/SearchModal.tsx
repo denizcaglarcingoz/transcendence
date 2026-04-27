@@ -128,17 +128,17 @@ export function SearchModal({ onClose }: { onClose: () => void }) {
         <div className="mt-6 text-sm text-red-500">
           {error}
         </div>
-      ) : results.length > 0 ? (
-        <div className="mt-6 space-y-3">
-          {results.map((profile) => (
-            <div
-           onClick={() => {
-             navigate(`/profile/${profile.id}`)
-             onClose()
-            }}
-            key={profile.id}
-            className="cursor-pointer rounded-xl border border-gray-200 p-3 transition-colors hover:bg-gray-50"
-          >
+      ) : results.length> 0 ? (
+            <div className="mt-6 max-h-[50vh] space-y-3 overflow-y-auto pr-1">
+             {results.map((profile) => (
+               <div
+                 onClick={() => {
+                   navigate(`/profile/${profile.id}`)
+                   onClose()
+                 }}
+                 key={profile.id}
+                 className="cursor-pointer rounded-xl border border-gray-200 p-3 transition-colors hover:bg-gray-50"
+            >
               <div className="flex flex-col gap-6">
               <div className="flex items-center gap-4">
               <img
@@ -157,7 +157,9 @@ export function SearchModal({ onClose }: { onClose: () => void }) {
 
 
             </div>
-          ))}
+          )
+            
+          )}
         </div>
       ) : (
         <div className="mt-6 space-y-3">
