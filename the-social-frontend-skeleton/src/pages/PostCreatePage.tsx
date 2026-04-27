@@ -221,7 +221,7 @@ export function PostCreatePage() {
               />
 			 
 			 <div className= "flex flex-col md:flex-row md:gap-4">
-			  <p className="ext-sm text-gray-500">
+			  <p className="text-sm text-gray-500">
   				{postForm.caption.length}/150
 				</p>
 			 <button
