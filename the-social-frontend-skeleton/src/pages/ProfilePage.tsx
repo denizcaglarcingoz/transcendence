@@ -1,16 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useMyProfile, useUpdateProfile, useUploadAvatar, useMyProfilePostPreviews } from '../hooks/useProfile'
 import { useTranslation } from 'react-i18next'
 import { BottomNav } from '../components/BottomNav'
 import { Link } from 'react-router-dom'
-import { mockPosts } from '../mocks/posts'
 import { PostDetailModal } from '../components/modals/PostDetailModal'
-import { CursorPageDto, ProfilePostPreviewDto } from '../types/api'
-import { useEffect} from 'react'
-import { getMyProfilePostPreviews } from '../api/profile.api'
-import { EditProfilePage } from './EditProfilePage'
 import { useNavigate } from 'react-router-dom'
 import { ProtectedPostThumbPreview } from '../components/ui/ProtectedPostThumb'
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 
 
 export function ProfilePage() {
@@ -23,8 +19,14 @@ export function ProfilePage() {
     data: profilePostsPageFromApi,
     isLoading: isPostsLoading,
     error: postsError,
-  } = useMyProfilePostPreviews(20, null)
-  const posts = profilePostsPageFromApi?.items //?? mockPosts
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMyProfilePostPreviews(20)
+  const posts = useMemo(
+    () => profilePostsPageFromApi?.pages.flatMap((page) => page.items) ?? [],
+    [profilePostsPageFromApi]
+  )
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
@@ -35,6 +37,18 @@ export function ProfilePage() {
     () => (selectedFile ? URL.createObjectURL(selectedFile) : null),
     [selectedFile]
   )
+
+  const loadMore = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return
+    }
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const sentinelRef = useInfiniteScroll({
+    enabled: !!hasNextPage && !isPostsLoading && !isFetchingNextPage,
+    onLoadMore: loadMore,
+  })
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -110,7 +124,7 @@ export function ProfilePage() {
           </button>
 
             {/* {the Posts Grid} */}
-          {posts?.map((post) => (
+          {posts.map((post) => (
               <div
                 key={post.id}
                 onClick={() => setSelectedPostId(post.id)}
@@ -119,7 +133,13 @@ export function ProfilePage() {
                 <ProtectedPostThumbPreview fileUrl={post.imageUrl} contentType={post.contentType} />
               </div>
             ))}
+
+          {hasNextPage && <div ref={sentinelRef} className="col-span-2 h-1 w-full" aria-hidden="true" />}
         </div>
+
+        {isFetchingNextPage && (
+          <div className="py-4 text-center text-sm text-gray-500">Loading more posts...</div>
+        )}
 
         {selectedPostId && (
           <PostDetailModal

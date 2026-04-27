@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import type { CommentPreviewDto, CursorPageDto} from '../types/api'
 import { getComments, postComment, deleteComment } from '../api/comment.api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -7,19 +7,18 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 export function useComments(
   postId?: string,
   take = 12,
-  cursor?: string | null,
   enabled = true
 ) {
-  const normalizedCursor = cursor ?? null
-
-  return useQuery<CursorPageDto<CommentPreviewDto>>({
-    queryKey: ['posts', postId, 'comments', take, normalizedCursor],
-    queryFn: () => {
+  return useInfiniteQuery<CursorPageDto<CommentPreviewDto>, Error>({
+    queryKey: ['posts', postId, 'comments', take],
+    queryFn: ({ pageParam }) => {
       if (!postId) {
         throw new Error('Post id is required.')
       }
-      return getComments(postId, take, normalizedCursor)
+      return getComments(postId, take, (pageParam ?? null) as string | null)
     },
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: !!postId && enabled,
     retry: (failureCount, error: any) => {
       if (error?.response?.status === 404) {

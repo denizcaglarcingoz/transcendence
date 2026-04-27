@@ -2,11 +2,12 @@ import api from "./axios"
 import { ApiResponse, CursorPageDto, PostDto } from "../types/api"
 
 export async function getFeed(
-  cursor?: string
+  take = 20,
+  cursor?: string | null
 ): Promise<CursorPageDto<PostDto>> {
   const response = await api.get<ApiResponse<CursorPageDto<PostDto>>>('/posts/feed', {
     params: {
-      take: 20,
+      take,
       cursor,
     },
   })

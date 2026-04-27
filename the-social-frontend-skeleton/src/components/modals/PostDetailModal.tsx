@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePost, useDeletePost } from '../../hooks/usePost'
 import { useComments, usePostComment, useDeleteComment } from '../../hooks/useComments'
@@ -7,6 +7,7 @@ import { PostDto } from '../../types/api'
 import api from '../../api/axios'
 import { useMyProfile } from '../../hooks/useProfile'
 import { LikesModal } from './LikesModal'
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll'
 
 type PostDetailModalProps = {
   postId: string
@@ -41,8 +42,27 @@ export function PostDetailModal({
     data: commentsData,
     isLoading: areCommentsLoading,
     error: commentsError,
-  } = useComments(postId, 12, null, !isDeletingPost && !isPostDeleted)
-  const comments = commentsData?.items ?? []
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useComments(postId, 12, !isDeletingPost && !isPostDeleted)
+  const comments = useMemo(
+    () => commentsData?.pages.flatMap((page) => page.items) ?? [],
+    [commentsData]
+  )
+
+  const loadMoreComments = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return
+    }
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const commentsSentinelRef = useInfiniteScroll({
+    enabled: !!hasNextPage && !areCommentsLoading && !isFetchingNextPage,
+    onLoadMore: loadMoreComments,
+    rootMargin: '150px',
+  })
 
   const handlePostComment = async () => {
     const trimmedContent = content.trim()
@@ -241,6 +261,12 @@ export function PostDetailModal({
               </div>
             </div>
           ))}
+
+          {isFetchingNextPage && (
+            <div className="py-2 text-center text-sm text-gray-500">Loading more comments...</div>
+          )}
+
+          {hasNextPage && <div ref={commentsSentinelRef} className="h-1 w-full" aria-hidden="true" />}
         </div>
 
         <div className="flex items-center gap-3">

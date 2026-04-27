@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { getPost, sharePost, uploadPostFile, getPostLikes } from '../api/posts.api'
 import type { PostDto, CreatePostDto, LikesPreviewDto, CursorPageDto } from '../types/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -21,19 +21,18 @@ export function usePost(postId?: string, enabled = true) {
 export function usePostLikes(
   postId?: string,
   take = 20,
-  cursor?: string | null,
   enabled = true
 ) {
-  const normalizedCursor = cursor ?? null
-
-  return useQuery<CursorPageDto<LikesPreviewDto>>({
-    queryKey: ['posts', postId, 'likes', take, normalizedCursor],
-    queryFn: () => {
+  return useInfiniteQuery<CursorPageDto<LikesPreviewDto>, Error>({
+    queryKey: ['posts', postId, 'likes', take],
+    queryFn: ({ pageParam }) => {
       if (!postId) {
         throw new Error('Post id is required.')
       }
-      return getPostLikes(postId, take, normalizedCursor)
+      return getPostLikes(postId, take, (pageParam ?? null) as string | null)
     },
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: !!postId && enabled,
   })
 }

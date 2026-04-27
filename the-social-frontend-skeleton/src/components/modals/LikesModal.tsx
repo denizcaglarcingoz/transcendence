@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePostLikes } from '../../hooks/usePost'
 import type { LikesPreviewDto } from '../../types/api'
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll'
 
 type LikesModalProps = {
   postId: string
@@ -10,31 +11,41 @@ type LikesModalProps = {
 
 export function LikesModal({ postId, onClose }: LikesModalProps) {
   const { t } = useTranslation()
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [likes, setLikes] = useState<LikesPreviewDto[]>([])
-  const { data: likesPage, isLoading, isFetching, error } = usePostLikes(postId, 20, cursor)
+  const {
+    data: likesData,
+    isLoading,
+    isFetching,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = usePostLikes(postId, 20)
   const apiBase = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
-  useEffect(() => {
-    setCursor(null)
-    setLikes([])
-  }, [postId])
-
-  useEffect(() => {
-    if (!likesPage) return
-
-    setLikes((prev) => {
-      const merged = [...prev, ...likesPage.items]
-      const seen = new Set<string>()
-      return merged.filter((item) => {
-        if (seen.has(item.authorId)) return false
-        seen.add(item.authorId)
-        return true
-      })
+  const likes = useMemo(() => {
+    const merged = likesData?.pages.flatMap((page) => page.items) ?? []
+    const seen = new Set<string>()
+    return merged.filter((item) => {
+      if (seen.has(item.authorId)) {
+        return false
+      }
+      seen.add(item.authorId)
+      return true
     })
-  }, [likesPage])
+  }, [likesData])
 
-  const hasMore = !!likesPage?.nextCursor
+  const loadMoreLikes = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return
+    }
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const sentinelRef = useInfiniteScroll({
+    enabled: !!hasNextPage && !isLoading && !isFetchingNextPage,
+    onLoadMore: loadMoreLikes,
+    rootMargin: '150px',
+  })
 
   const getAvatarSrc = (avatarPath: string | null) => {
     if (!avatarPath) {
@@ -108,11 +119,11 @@ export function LikesModal({ postId, onClose }: LikesModalProps) {
             )
           })}
 
-          {!isLoading && !error && hasMore && (
+          {!isLoading && !error && hasNextPage && (
             <div className="pt-2">
               <button
                 type="button"
-                onClick={() => setCursor(likesPage?.nextCursor ?? null)}
+                onClick={loadMoreLikes}
                 disabled={isFetching}
                 className="w-full rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 disabled:opacity-50"
               >
@@ -120,6 +131,8 @@ export function LikesModal({ postId, onClose }: LikesModalProps) {
               </button>
             </div>
           )}
+
+          {hasNextPage && <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />}
         </div>
       </div>
     </div>
