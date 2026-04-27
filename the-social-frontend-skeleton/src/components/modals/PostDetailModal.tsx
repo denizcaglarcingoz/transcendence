@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePost, useDeletePost } from '../../hooks/usePost'
 import { useComments, usePostComment, useDeleteComment } from '../../hooks/useComments'
@@ -7,6 +7,7 @@ import { PostDto } from '../../types/api'
 import api from '../../api/axios'
 import { useMyProfile } from '../../hooks/useProfile'
 import { LikesModal } from './LikesModal'
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll'
 
 type PostDetailModalProps = {
   postId: string
@@ -41,8 +42,27 @@ export function PostDetailModal({
     data: commentsData,
     isLoading: areCommentsLoading,
     error: commentsError,
-  } = useComments(postId, 12, null, !isDeletingPost && !isPostDeleted)
-  const comments = commentsData?.items ?? []
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useComments(postId, 12, !isDeletingPost && !isPostDeleted)
+  const comments = useMemo(
+    () => commentsData?.pages.flatMap((page) => page.items) ?? [],
+    [commentsData]
+  )
+
+  const loadMoreComments = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return
+    }
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const commentsSentinelRef = useInfiniteScroll({
+    enabled: !!hasNextPage && !areCommentsLoading && !isFetchingNextPage,
+    onLoadMore: loadMoreComments,
+    rootMargin: '150px',
+  })
 
   const handlePostComment = async () => {
     const trimmedContent = content.trim()
@@ -143,6 +163,7 @@ export function PostDetailModal({
         onClick={(e) => e.stopPropagation()}
         className="panel relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 space-y-6"
       >
+        {/* Close Button */}
         <div>
           <button
             onClick={onClose}
@@ -152,6 +173,7 @@ export function PostDetailModal({
           </button>
         </div>
 
+        {/* User Top Information */}
         <div className="flex items-center gap-4 pt-2">
           <img
             src={displayPost.authorAvatarUrl ? `${import.meta.env.VITE_API_BASE_URL}${displayPost.authorAvatarUrl}` : 'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'}
@@ -176,12 +198,14 @@ export function PostDetailModal({
           </div>
         </div>
 
+          {/* Post */}
         <div className="w-full rounded-2xl object-cover">
           <ProtectedPostThumbContent fileUrl={displayPost.imageUrl} contentType={displayPost.contentType} />
         </div>
-
+        {/* Post Caption */}
         <p>{displayPost.content}</p>
 
+        {/* Like */}
         <div className="flex items-center gap-2">
           <button
             onClick={toggleLike}
@@ -206,10 +230,12 @@ export function PostDetailModal({
             {(localPost?.likesCount ?? 0) > 1 ? t('postdetail.likes') : t('postdetail.like')}
           </button>
         </div>
-
-        <div className="space-y-4">
+          
+        {/* Existing Comments */}
+       <div className="space-y-4 max-h-[30vh] overflow-y-auto pr-2">
           {comments.map((comment) => (
             <div key={comment.id} className="flex items-start gap-3">
+              {/* Comment Owner Avatar */}
               <img
                 src={
                   comment.authorProfileImageUrl
@@ -220,10 +246,14 @@ export function PostDetailModal({
                 className="h-10 w-10 rounded-full object-cover"
               />
 
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
+                  {/* Comment Owner Full Name */}
                   <span className="font-semibold">{comment.fullName}</span>
+                  {/* Comment Owner UserName */} 
                   <span className="text-sm text-gray-500">@{comment.username}</span>
+
+                  {/* Comment Owner can Delete X button */} 
                   {comment.authorId === currentUserId && (
                     <button
                       type="button"
@@ -237,17 +267,31 @@ export function PostDetailModal({
                     </button>
                   )}
                 </div>
-                <p>{comment.content}</p>
+                {/* Comment CONTENT */} 
+                <p
+                  className="whitespace-pre-wrap"
+                  style={{ overflowWrap: 'anywhere' }}
+                >
+                  {comment.content}
+                </p>
               </div>
             </div>
           ))}
+
+          {isFetchingNextPage && (
+            <div className="py-2 text-center text-sm text-gray-500">Loading more comments...</div>
+          )}
+
+          {hasNextPage && <div ref={commentsSentinelRef} className="h-1 w-full" aria-hidden="true" />}
         </div>
 
+          {/* Comment Input Bar */}
         <div className="flex items-center gap-3">
           <input
             type="text"
             placeholder={t('postdetail.writeacomment')}
             value={content}
+            maxLength={100}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {

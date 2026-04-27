@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BottomNav } from '../components/BottomNav'
 import { PostDetailModal } from '../components/modals/PostDetailModal'
 import { useFeed } from '../hooks/useFeed'
-import { mockFeedPosts } from '../mocks/posts'
 import type { PostDto } from '../types/api'
 import { ProtectedPostThumbContent } from '../components/ui/ProtectedPostThumb'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import { useTranslation } from 'react-i18next'
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 
 export function FeedPage() {
-  const { data, isLoading, error } = useFeed()
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useFeed(20)
   const { t } = useTranslation()
 
   const [postsFeed, setPostsFeed] = useState<PostDto[]>([])
@@ -18,9 +18,26 @@ export function FeedPage() {
 
   const navigate = useNavigate()
 
+  const allPosts = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data]
+  )
+
   useEffect(() => {
-    setPostsFeed(data?.items ?? []) // ?? mockFeedPosts)
-  }, [data])
+    setPostsFeed(allPosts)
+  }, [allPosts])
+
+  const loadMore = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return
+    }
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const sentinelRef = useInfiniteScroll({
+    enabled: !!hasNextPage && !isLoading && !isFetchingNextPage,
+    onLoadMore: loadMore,
+  })
 
   const updateLikeState = (postId: string) => {
   setPostsFeed((prev) =>
@@ -135,6 +152,12 @@ const toggleLike = async (postId: string) => {
             </article>
           )) : <div className="text-center py-12 text-gray-500">{t('feed.nothingtoshow')}</div>
         )}
+
+        {isFetchingNextPage && (
+          <div className="text-center py-4 text-sm text-gray-500">Loading more...</div>
+        )}
+
+        {hasNextPage && <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />}
       </main>
 
       {selectedPostId && (

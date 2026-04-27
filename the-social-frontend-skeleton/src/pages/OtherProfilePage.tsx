@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { useUpdateProfile, useUploadAvatar, useOtherProfilePostPreviews, useOtherProfile } from '../hooks/useProfile'
 import { useAcceptFriendRequest, useDeclineFriendRequest} from '../hooks/useFriendRequest'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +8,7 @@ import { PostDetailModal } from '../components/modals/PostDetailModal'
 import { ProtectedPostThumbPreview } from '../components/ui/ProtectedPostThumb'
 import { useAddFriend, useRemoveFriend } from '../hooks/useFriends'
 import { FriendshipStatus } from '../types/api'
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll'
 
 
 
@@ -43,8 +44,14 @@ export function OtherProfilePage() {
   data: profilePostsPageFromApi,
   isLoading: isPostsLoading,
   error: postsError,
-} = useOtherProfilePostPreviews(profileId, 20, null, status === 'friends')
-  const posts = profilePostsPageFromApi?.items //?? mockPosts
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useOtherProfilePostPreviews(profileId, 20, status === 'friends')
+    const posts = useMemo(
+      () => profilePostsPageFromApi?.pages.flatMap((page) => page.items) ?? [],
+      [profilePostsPageFromApi]
+    )
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
@@ -54,6 +61,18 @@ export function OtherProfilePage() {
     () => (selectedFile ? URL.createObjectURL(selectedFile) : null),
     [selectedFile]
   )
+
+  const loadMore = useCallback(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return
+    }
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  const sentinelRef = useInfiniteScroll({
+    enabled: !!hasNextPage && !isPostsLoading && !isFetchingNextPage,
+    onLoadMore: loadMore,
+  })
 
   
   const toggleFriendship = async (id: string) => {
@@ -203,7 +222,7 @@ const declineFriendRequest = async (profileId: string) => {
         <div className="grid grid-cols-2 gap-4">
           {/* {the Post Create} */}
             {/* {the Posts Grid} */}
-          {posts?.map((post) => (
+          {posts.map((post) => (
               <div
                 key={post.id}
                 onClick={() => setSelectedPostId(post.id)}
@@ -212,7 +231,13 @@ const declineFriendRequest = async (profileId: string) => {
                 <ProtectedPostThumbPreview fileUrl={post.imageUrl} contentType={post.contentType}/>
               </div>
             ))}
+
+          {hasNextPage && <div ref={sentinelRef} className="col-span-2 h-1 w-full" aria-hidden="true" />}
         </div>
+
+        {isFetchingNextPage && (
+          <div className="py-4 text-center text-sm text-gray-500">Loading more posts...</div>
+        )}
 
         {selectedPostId && (
           <PostDetailModal

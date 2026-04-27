@@ -61,7 +61,14 @@ export function ChatPage() {
   const [draftTargetUserId, setDraftTargetUserId] = useState<string | null>(null)
   const [draftTargetUserName, setDraftTargetUserName] = useState<string | null>(null)
   
- 
+
+
+ const shouldShowDraft =
+  draftTargetUserId &&
+  !activeConversationId &&
+  !conversations.some(c => c.targetUserId === draftTargetUserId)
+
+
   async function loadConversations() {
     if (!currentUserId) return []
 
@@ -538,6 +545,21 @@ useEffect(() => {
   const { t } = useTranslation()
 const isDraftTargetOnline =
   draftTargetUserId !== null && onlineUserIds.includes(draftTargetUserId)
+
+  // To start scrollbar of the Conversation window from buttom to see last message
+useEffect(() => {
+  if (!activeConversationId || loadingMessages) return
+
+  requestAnimationFrame(() => {
+    const container = messagesContainerRef.current
+
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  })
+}, [activeConversationId, loadingMessages])  
+
+
 return (
   
   <div className="flex h-[calc(100dvh-250px)] items-center justify-center bg-white p-4">
@@ -548,6 +570,7 @@ return (
             {t('chat.chats')}
           </h2>
 
+          {/* SEARCH BAR */}
           <div className="relative mb-2">
             <input
               value={search}
@@ -555,25 +578,36 @@ return (
               placeholder={t('chat.searchUsers')}
               className="input w-full text-xs"
             />
-
-            {searchResults.length > 0 && (
+            { searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-lg max-h-32 overflow-y-auto">
-                {searchResults.map(userItem => (
-                  <button
-                    key={userItem.id}
-                    type="button"
-                    onMouseDown={e => {
-                      e.preventDefault()
-                      openDraftConversation(userItem.id, userItem.username)
-                    }}
-                    className="block w-full text-left px-2 py-1 border-b border-gray-100 hover:bg-gray-100 transition-colors text-xs"
-                  >
-                    <div className="font-medium text-gray-900">
-                      {userItem.username}
-                    </div>
-                  </button>
-                ))}
-              </div>
+                  {searchResults.map(userItem => (
+                <button
+                  key={userItem.id}
+                  type="button"
+                  onMouseDown={e => {
+                  e.preventDefault()
+                
+                  const existingConversation = conversations.find(
+                    conversation => conversation.targetUserId === userItem.id
+                  )
+                
+                  if (existingConversation) {
+                    setSearch('')
+                    void openConversation(existingConversation.id)
+                    return
+                  }
+                
+                  openDraftConversation(userItem.id, userItem.username)
+                  setSearch('')
+                }}
+                className="block w-full text-left px-2 py-1 border-b border-gray-100 hover:bg-gray-100 transition-colors text-xs"
+              >
+                <div className="font-medium text-gray-900">
+                  {userItem.username}
+                </div>
+              </button>
+              ))}
+            </div>
             )}
           </div>
 
@@ -583,9 +617,11 @@ return (
             </p>
           )}
 
-          <div className="space-y-0.5 flex-1 min-h-0 overflow-y-auto">
 
-            {draftTargetUserId && (
+          {/* Left  Part with existing user conversations */}
+          <div className="w-[250px] flex-shrink-0 overflow-y-auto">
+
+           {shouldShowDraft && (
               <button
                 type="button"
                 className="w-full text-left p-1.5 rounded-lg transition-all bg-gray-400 border border-gray-500 mb-0.5"
@@ -649,13 +685,19 @@ return (
                         className="w-5 h-5 rounded-full object-cover flex-shrink-0"
                       />
 
-                      <div className="flex-1 min-w-0">
+                        {/* Username */}
+                        <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 truncate text-xs">
                           {conversation.targetUserName}
                         </div>
 
+                        {/* Last Message Preview */}
                         <div className="text-xs text-gray-600 truncate">
-                          {conversation.lastMessage || t('chat.noMessagesYet')}
+                          {conversation.lastMessage
+                            ? conversation.lastMessage.length > 10
+                              ? `${conversation.lastMessage.slice(0, 10)}...`
+                              : conversation.lastMessage
+                            : t('chat.noMessagesYet')}
                         </div>
                       </div>
 
@@ -680,18 +722,20 @@ return (
           </div>
         </aside>
 
+            {/* Right Part with Conversation Window and Message Input Bar */}
         <main className="flex-1 flex flex-col bg-gray-300 rounded-2xl p-3 min-h-0">
+          {/* Conversation Window */}
           <div
             ref={messagesContainerRef}
             className="flex-1 overflow-y-auto p-2 space-y-0.5 min-h-0 bg-white rounded-lg mb-1.5"
           >
-              {!activeConversationId && !draftTargetUserId && !loadingMessages && (
+              {!activeConversationId && !shouldShowDraft  && !loadingMessages && (
                 <div className="text-center py-2 text-gray-500 text-xs">
                   {t('chat.selectConversation')}
                 </div>
               )}
 
-              {draftTargetUserId && (
+              {shouldShowDraft  && (
                 <div className="text-center py-2 text-gray-500 text-xs">
                   New chat with {draftTargetUserName}
                 </div>
@@ -714,19 +758,23 @@ return (
                 const isMine = message.senderId === currentUserId
 
                 return (
-                  <div
-                    key={message.messageId}
-                    className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs px-1.5 py-0.5 rounded-lg text-xs ${
-                        isMine
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200 text-gray-900'
-                      }`}
-                    >
-                      <div>{message.content}</div>
-
+                        <div
+                          key={message.messageId}
+                          className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-xs px-3 py-2 rounded-lg text-xs ${
+                              isMine ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
+                            }`}
+                          >
+                            <div
+                              className="whitespace-pre-wrap text-sm"
+                              style={{ overflowWrap: 'anywhere' }}
+                            >
+                              {message.content}
+                            </div>
+                      
+                      {/* Creation Time */}
                       <div
                         className={`text-xs mt-0.5 ${
                           isMine ? 'text-blue-100' : 'text-gray-600'
@@ -755,28 +803,35 @@ return (
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="bg-white rounded-lg p-1.5 flex-shrink-0">
-            <div className="flex gap-1">
-              <input
-                value={text}
-                onChange={e => setText(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    void handleSend()
-                  }
-                }}
-                placeholder={t('chat.typeMessage')}
-                className="input flex-1 text-xs"
-              />
+              {/* INPUT BAR */}
+          <div className="flex flex-col gap-4">
+             <textarea
+              value={text}
+              maxLength={150}
+              rows={2}
+              onChange={e => setText(e.target.value)}
+              className="w-full resize-none rounded-xl border border-panel px-4 py-5 text-xs outline-none focus:border-black"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  void handleSend()
+                }
+              }}
+            />
 
-              <button
-                onClick={() => void handleSend()}
-                disabled={sending || !text.trim() || !currentUserId}
-                className="btn-primary px-2 py-1 text-xs disabled:opacity-50"
-              >
-                {sending ? t('common.loading') : t('chat.send')}
-              </button>
+              <div className= "flex flex-col md:flex-row md:gap-4">
+                <p className="text-sm text-gray-500">
+                {text.length}/150
+                </p>
+                  
+
+                <button
+                  onClick={() => void handleSend()}
+                  disabled={sending || !text.trim() || !currentUserId}
+                  className="btn-ghost h-[40px] min-w-[140px] text-sm rounded-xl px-4 ml-auto"
+                  >
+                  {sending ? t('common.loading') : t('chat.send')}
+                </button>
             </div>
           </div>
         </main>
