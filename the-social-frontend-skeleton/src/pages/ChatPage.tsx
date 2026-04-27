@@ -546,7 +546,20 @@ useEffect(() => {
 const isDraftTargetOnline =
   draftTargetUserId !== null && onlineUserIds.includes(draftTargetUserId)
 
-  
+  // To start scrollbar of the Conversation window from buttom to see last message
+useEffect(() => {
+  if (!activeConversationId || loadingMessages) return
+
+  requestAnimationFrame(() => {
+    const container = messagesContainerRef.current
+
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  })
+}, [activeConversationId, loadingMessages])  
+
+
 return (
   
   <div className="flex h-[calc(100dvh-250px)] items-center justify-center bg-white p-4">
@@ -606,7 +619,7 @@ return (
 
 
           {/* Left  Part with existing user conversations */}
-          <div className="w-[420px] flex-shrink-0 overflow-y-auto">
+          <div className="w-[250px] flex-shrink-0 overflow-y-auto">
 
            {shouldShowDraft && (
               <button
