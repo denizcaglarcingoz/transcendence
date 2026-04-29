@@ -40,13 +40,13 @@ const decodeBase64Url = (base64Url: string): string => {
 
 export const isJwtExpired = (token: string): boolean => {
   try {
-    const payloadSegment = token.split('.')[1]
+    const parts = token.split('.')
 
-    if (!payloadSegment) {
+    if (parts.length !== 3) {
       return true
     }
 
-    const payload = JSON.parse(decodeBase64Url(payloadSegment))
+    const payload = JSON.parse(decodeBase64Url(parts[1]))
 
     if (!payload.exp) {
       return true
