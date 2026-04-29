@@ -25,8 +25,8 @@ public interface IChatService
 	Task MarkConversationAsRead(Guid userId, Guid conversationId);
 
     Task<Guid?> GetLastMessageId(Guid conversationId);
-
-};
+    Task   DeleteMessageAsync(Guid userId, Guid messageId); 
+}   
 
 /*
 ChatService is where business logic starts.
