@@ -82,11 +82,19 @@ public sealed class ConversationRepository : IConversationRepository
                              p.UserId == userId);
     }
 
-    public async Task <IReadOnlyList<Conversation>> GetConversations(Guid userId)
-    {
-        return await _db.Conversations.Include(c => c.Participants).Where(c => c.Participants.Any(p => p.UserId == userId)).ToListAsync();
-    }
-
+public async Task<IReadOnlyList<Conversation>> GetConversations(
+    Guid userId,
+    int offset,
+    int limit)
+{
+    return await _db.Conversations
+        .Include(c => c.Participants)
+        .Where(c => c.Participants.Any(p => p.UserId == userId))
+        .OrderByDescending(c => c.LastMessageAt ?? c.CreatedAt)
+        .Skip(offset)
+        .Take(limit)
+        .ToListAsync();
+}
     //  public async Task <IReadOnlyList<Guid>>  GetUserInterlocutors(Guid userId)
     // {
     //         return await _db.ConversationParticipants

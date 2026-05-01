@@ -1,5 +1,6 @@
 using Transcendence.Application.Chat.DTOs;
 using Transcendence.Application.Friends.DTOs;
+using Transcendence.Application.Posts.DTOs;
 
 namespace Transcendence.Application.Realtime.Contracts;
 
@@ -21,4 +22,10 @@ public interface INotificationService
     Task NotifyConversationCreated(Guid userA, Guid userB, Guid conversationId);
     Task NotifyConversationDeleted(IEnumerable <Guid> participantIds, Guid conversationId);
     Task NotifyConversationsChanged(IEnumerable<Guid> userIds);
+    Task NotifyComment(
+    Guid targetUserId,
+    Guid actorUserId,
+    Guid postId,
+    CommentPreviewDto dto);
+    Task NotifyPostLiked(Guid targetUserId, Guid actorUserId, Guid postId);
 }

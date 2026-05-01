@@ -45,6 +45,9 @@ export function ChatPage() {
   const shouldScrollToBottomRef = useRef(false)
   const messagesContainerRef = useRef<HTMLDivElement | null>(null)
 
+  const conversationsContainerRef = useRef<HTMLDivElement | null>(null)
+  const conversationsOffsetRef = useRef(0)
+
   const [conversations, setConversations] = useState<ConversationDto[]>([])
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageDto[]>([])
@@ -62,6 +65,10 @@ export function ChatPage() {
   const [hasMoreMessages, setHasMoreMessages] = useState(true)
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false)
 
+  const [conversationsOffset, setConversationsOffset] = useState(0)
+  const [hasMoreConversations, setHasMoreConversations] = useState(true)
+  const [loadingMoreConversations, setLoadingMoreConversations] = useState(false)
+
   const [draftTargetUserId, setDraftTargetUserId] = useState<string | null>(null)
   const [draftTargetUserName, setDraftTargetUserName] = useState<string | null>(null)
 
@@ -73,19 +80,77 @@ export function ChatPage() {
   const isDraftTargetOnline =
     draftTargetUserId !== null && onlineUserIds.includes(draftTargetUserId)
 
-  async function loadConversations() {
+  async function loadConversations(reset = true, customLimit?: number) {
     if (!currentUserId) return []
+
+    const pageSize = 20
+    const offset = reset ? 0 : conversationsOffsetRef.current
+    const limit = customLimit ?? pageSize
 
     setError(null)
 
     try {
-      const data = await getConversations(currentUserId)
-      setConversations(data)
-      publishUnreadCount(data)
-      return data
+      const data = await getConversations(currentUserId, offset, limit)
+
+      if (reset) {
+        setConversations(data)
+        setConversationsOffset(data.length)
+        conversationsOffsetRef.current = data.length
+        setHasMoreConversations(data.length === limit)
+        publishUnreadCount(data)
+
+        return data
+      }
+
+      let nextConversations: ConversationDto[] = []
+
+      setConversations(prev => {
+        const existingIds = new Set(prev.map(item => item.id))
+        const uniqueNewItems = data.filter(item => !existingIds.has(item.id))
+
+        nextConversations = [...prev, ...uniqueNewItems]
+
+        publishUnreadCount(nextConversations)
+
+        return nextConversations
+      })
+
+      setConversationsOffset(prev => {
+        const nextOffset = prev + data.length
+        conversationsOffsetRef.current = nextOffset
+        return nextOffset
+      })
+
+      setHasMoreConversations(data.length === limit)
+
+      return nextConversations
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load conversations')
       return []
+    }
+  }
+
+  async function refreshLoadedConversations() {
+    if (!currentUserId) return []
+
+    const pageSize = 20
+    const loadedCount = conversationsOffsetRef.current
+    const limit = Math.max(loadedCount, pageSize)
+
+    return loadConversations(true, limit)
+  }
+
+  async function loadMoreConversations() {
+    if (!currentUserId) return
+    if (loadingMoreConversations) return
+    if (!hasMoreConversations) return
+
+    setLoadingMoreConversations(true)
+
+    try {
+      await loadConversations(false)
+    } finally {
+      setLoadingMoreConversations(false)
     }
   }
 
@@ -194,7 +259,7 @@ export function ChatPage() {
         await markAsRead(connection, conversationId)
         await markConversationNotificationsAsRead(conversationId)
         window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
-        await loadConversations()
+        await refreshLoadedConversations()
         window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
       }
     } catch (err) {
@@ -251,7 +316,7 @@ export function ChatPage() {
         content: trimmedText,
       })
 
-      await loadConversations()
+      await refreshLoadedConversations()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message')
     } finally {
@@ -280,7 +345,7 @@ export function ChatPage() {
         return next
       })
 
-      await loadConversations()
+      await refreshLoadedConversations()
       window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
     } catch (err) {
       console.error('Failed to sync read state', err)
@@ -308,7 +373,7 @@ export function ChatPage() {
       )
 
       await deleteMessage(currentUserId, messageId)
-      await loadConversations()
+      await refreshLoadedConversations()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete message')
       await loadConversationMessages(activeConversationIdRef.current)
@@ -336,6 +401,12 @@ export function ChatPage() {
         return next
       })
 
+      setConversationsOffset(prev => {
+        const nextOffset = Math.max(prev - 1, 0)
+        conversationsOffsetRef.current = nextOffset
+        return nextOffset
+      })
+
       if (wasActive) {
         activeConversationIdRef.current = null
         setActiveConversationId(null)
@@ -353,14 +424,14 @@ export function ChatPage() {
 
       await deleteConversation(currentUserId, conversationId)
 
-      const freshConversations = await loadConversations()
+      const freshConversations = await refreshLoadedConversations()
 
       if (wasActive && freshConversations.length > 0) {
         await openConversation(freshConversations[0].id)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete conversation')
-      await loadConversations()
+      await refreshLoadedConversations()
     } finally {
       setDeletingConversationIds(prev => prev.filter(id => id !== conversationId))
     }
@@ -387,7 +458,7 @@ export function ChatPage() {
     if (!container) return
 
     function handleScroll() {
-    if (!container) return
+      if (!container) return
 
       if (container.scrollTop <= 80) {
         void loadOlderMessages()
@@ -402,8 +473,39 @@ export function ChatPage() {
   }, [loadingOlderMessages, hasMoreMessages, messagesOffset, currentUserId])
 
   useEffect(() => {
+    const container = conversationsContainerRef.current
+    if (!container) return
+
+    function handleScroll() {
+      if (!container) return
+
+      const distanceToBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight
+
+      if (distanceToBottom <= 80) {
+        void loadMoreConversations()
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll)
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+    }
+  }, [
+    conversationsOffset,
+    hasMoreConversations,
+    loadingMoreConversations,
+    currentUserId,
+  ])
+
+  useEffect(() => {
     messagesRef.current = messages
   }, [messages])
+
+  useEffect(() => {
+    conversationsOffsetRef.current = conversationsOffset
+  }, [conversationsOffset])
 
   useEffect(() => {
     function handleVisibilityChange() {
@@ -429,12 +531,8 @@ export function ChatPage() {
     if (!connection || !currentUserId) return
 
     async function reloadConversations() {
-      if (!currentUserId) return
-
       try {
-        const data = await getConversations(currentUserId)
-        setConversations(data)
-        publishUnreadCount(data)
+        await refreshLoadedConversations()
       } catch (err) {
         console.error('Failed to reload conversations', err)
       }
@@ -514,6 +612,12 @@ export function ChatPage() {
         const next = prev.filter(item => item.id !== payload.conversationId)
         publishUnreadCount(next)
         return next
+      })
+
+      setConversationsOffset(prev => {
+        const nextOffset = Math.max(prev - 1, 0)
+        conversationsOffsetRef.current = nextOffset
+        return nextOffset
       })
 
       if (activeConversationIdRef.current === payload.conversationId) {
@@ -596,11 +700,8 @@ export function ChatPage() {
       try {
         setError(null)
 
-        const list = await getConversations(currentUserId)
+        const list = await loadConversations(true)
         if (!isMounted) return
-
-        setConversations(list)
-        publishUnreadCount(list)
 
         if (list.length > 0) {
           await openConversation(list[0].id)
@@ -731,7 +832,10 @@ export function ChatPage() {
               </p>
             )}
 
-            <div className="w-[250px] flex-shrink-0 overflow-y-auto space-y-1">
+            <div
+              ref={conversationsContainerRef}
+              className="w-[250px] flex-shrink-0 overflow-y-auto space-y-1"
+            >
               {shouldShowDraft && (
                 <button
                   type="button"
@@ -768,85 +872,93 @@ export function ChatPage() {
                   {t('chat.selectConversation')}
                 </p>
               ) : (
-                conversations.map(conversation => {
-                  const isOnline = onlineUserIds.includes(conversation.targetUserId)
-                  const isDeletingConversation = deletingConversationIds.includes(conversation.id)
+                <>
+                  {conversations.map(conversation => {
+                    const isOnline = onlineUserIds.includes(conversation.targetUserId)
+                    const isDeletingConversation = deletingConversationIds.includes(conversation.id)
 
-                  const avatarSrc = conversation.targetUserAvatarUrl
-                    ? `${import.meta.env.VITE_API_BASE_URL}${conversation.targetUserAvatarUrl}`
-                    : 'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'
+                    const avatarSrc = conversation.targetUserAvatarUrl
+                      ? `${import.meta.env.VITE_API_BASE_URL}${conversation.targetUserAvatarUrl}`
+                      : 'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'
 
-                  return (
-                    <div
-                      key={conversation.id}
-                      className={`group flex w-full items-center rounded-lg transition-all ${
-                        conversation.id === activeConversationId
-                          ? 'bg-gray-400 border border-gray-500'
-                          : 'bg-gray-200 hover:bg-gray-100'
-                      } ${isDeletingConversation ? 'opacity-50' : ''}`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => void openConversation(conversation.id)}
-                        className="flex-1 text-left p-1.5 min-w-0"
+                    return (
+                      <div
+                        key={conversation.id}
+                        className={`group flex w-full items-center rounded-lg transition-all ${
+                          conversation.id === activeConversationId
+                            ? 'bg-gray-400 border border-gray-500'
+                            : 'bg-gray-200 hover:bg-gray-100'
+                        } ${isDeletingConversation ? 'opacity-50' : ''}`}
                       >
-                        <div className="flex items-center gap-1.5">
-                          <img
-                            src={avatarSrc}
-                            onError={event => {
-                              event.currentTarget.src =
-                                'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'
-                            }}
-                            alt={conversation.targetUserName}
-                            className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-                          />
-
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 truncate text-xs">
-                              {conversation.targetUserName}
-                            </div>
-
-                            <div className="text-xs text-gray-600 truncate">
-                              {conversation.lastMessage
-                                ? conversation.lastMessage.length > 10
-                                  ? `${conversation.lastMessage.slice(0, 10)}...`
-                                  : conversation.lastMessage
-                                : t('chat.noMessagesYet')}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {conversation.unreadCount > 0 && (
-                              <span className="min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
-                                {conversation.unreadCount}
-                              </span>
-                            )}
-
-                            <span
-                              className={`inline-block w-2.5 h-2.5 rounded-full ring-1 ring-gray-300 ${
-                                isOnline ? 'bg-green-500' : 'bg-gray-400'
-                              }`}
+                        <button
+                          type="button"
+                          onClick={() => void openConversation(conversation.id)}
+                          className="flex-1 text-left p-1.5 min-w-0"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <img
+                              src={avatarSrc}
+                              onError={event => {
+                                event.currentTarget.src =
+                                  'https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg'
+                              }}
+                              alt={conversation.targetUserName}
+                              className="w-5 h-5 rounded-full object-cover flex-shrink-0"
                             />
-                          </div>
-                        </div>
-                      </button>
 
-                      <button
-                        type="button"
-                        onClick={event => {
-                          event.stopPropagation()
-                          void handleDeleteConversation(conversation.id)
-                        }}
-                        disabled={isDeletingConversation}
-                        aria-label="Delete conversation"
-                        title="Delete conversation"
-                        className="mr-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-500 opacity-0 transition-all hover:bg-red-100 hover:text-red-600 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        ×
-                      </button>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-900 truncate text-xs">
+                                {conversation.targetUserName}
+                              </div>
+
+                              <div className="text-xs text-gray-600 truncate">
+                                {conversation.lastMessage
+                                  ? conversation.lastMessage.length > 10
+                                    ? `${conversation.lastMessage.slice(0, 10)}...`
+                                    : conversation.lastMessage
+                                  : t('chat.noMessagesYet')}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {conversation.unreadCount > 0 && (
+                                <span className="min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                                  {conversation.unreadCount}
+                                </span>
+                              )}
+
+                              <span
+                                className={`inline-block w-2.5 h-2.5 rounded-full ring-1 ring-gray-300 ${
+                                  isOnline ? 'bg-green-500' : 'bg-gray-400'
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={event => {
+                            event.stopPropagation()
+                            void handleDeleteConversation(conversation.id)
+                          }}
+                          disabled={isDeletingConversation}
+                          aria-label="Delete conversation"
+                          title="Delete conversation"
+                          className="mr-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-500 opacity-0 transition-all hover:bg-red-100 hover:text-red-600 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )
+                  })}
+
+                  {loadingMoreConversations && (
+                    <div className="text-center py-2 text-gray-500 text-xs">
+                      {t('common.loading')}
                     </div>
-                  )
-                })
+                  )}
+                </>
               )}
             </div>
           </aside>

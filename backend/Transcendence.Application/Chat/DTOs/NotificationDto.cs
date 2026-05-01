@@ -1,4 +1,6 @@
 namespace Transcendence.Application.Chat.DTOs;
+using Transcendence.Application.Posts.DTOs;
+
 using Transcendence.Domain.Notifications;
 public sealed class NotificationDto
 {
@@ -49,5 +51,27 @@ public sealed class NotificationDto
             CreatedAt = DateTimeOffset.UtcNow
         };
     }
+    public static NotificationDto PostCommented(CommentPreviewDto dto)
+    {
+        return new NotificationDto
+        {
+            Id = Guid.NewGuid(),
+            Type = NotificationType.PostCommented,
+            Payload = dto,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
+
+    public static NotificationDto PostLiked(PostLikeNotificationDto dto)
+    {
+        return new NotificationDto
+        {
+            Id = Guid.NewGuid(),
+            Type = NotificationType.PostLiked,
+            Payload = dto,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
+ 
 }
  

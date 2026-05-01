@@ -18,11 +18,15 @@ public class ConversationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<ConversationDto>>>> GetConversations()
+
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<ConversationDto>>>> GetConversations(
+        [FromQuery] int offset = 0,
+        [FromQuery] int limit = 20
+    )
     {
         var userId = GetUserId();
 
-        var conversations = await _chatService.GetConversations(userId);
+        var conversations = await _chatService.GetConversations(userId, offset, limit);
 
         return this.OkResponse(conversations);
     }

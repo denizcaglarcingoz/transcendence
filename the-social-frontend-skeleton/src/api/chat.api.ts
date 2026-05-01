@@ -111,8 +111,12 @@ async function apiFetch<T>(
   return json.data
 }
 
-export async function getConversations(userId: string): Promise<ConversationDto[]> {
-  return apiFetch<ConversationDto[]>(userId, `${API_BASE_URL}/conversations`)
+export async function getConversations(
+  userId: string,
+  offset = 0,
+  limit = 20
+): Promise<ConversationDto[]> {
+  return apiFetch<ConversationDto[]>(userId, `${API_BASE_URL}/conversations?offset=${offset}&limit=${limit}`)
 }
 
 export async function createDirectConversation(

@@ -6,6 +6,8 @@ export enum NotificationType {
   FriendRequest = 2,
   FriendRequestAccepted = 3,
   FriendRequestDeclined = 4,
+  Comment = 5,
+  Post = 6
 }
 
 export type NotificationListItemDto = {
