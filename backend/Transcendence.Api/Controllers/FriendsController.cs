@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Transcendence.Application.Common.Responses;
 using Transcendence.Api.Common.Extensions;
 using Transcendence.Application.Common.DTOs;
 using Transcendence.Application.Users.DTOs;
@@ -11,6 +10,10 @@ using Transcendence.Application.Users.Services;
 using Transcendence.Application.Friends.DTOs;
 using Transcendence.Application.Friends.Interfaces;
 using Transcendence.Application.Friends.Services;
+using Transcendence.Application.Posts.DTOs;
+using Transcendence.Application.Users.DTOs;
+using Transcendence.Application.Users.Interfaces;
+using Transcendence.Application.Users.Services;
 
 namespace Transcendence.Api.Controllers;
 

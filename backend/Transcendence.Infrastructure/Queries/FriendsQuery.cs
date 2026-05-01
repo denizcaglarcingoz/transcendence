@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Transcendence.Application.Common.DTOs;
 using Transcendence.Application.Friends.DTOs;
 using Transcendence.Application.Friends.Queries;
+using Transcendence.Application.Posts.DTOs;
 using Transcendence.Infrastructure.Persistence;
 
 namespace Transcendence.Infrastructure.Queries;

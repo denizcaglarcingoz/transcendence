@@ -5,6 +5,7 @@ using Transcendence.Application.Friends.Exceptions;
 using Transcendence.Application.Friends.Interfaces;
 using Transcendence.Application.Friends.Queries;
 using Transcendence.Application.Notifications.Interfaces;
+using Transcendence.Application.Posts.DTOs;
 using Transcendence.Application.Realtime.Contracts;
 using Transcendence.Application.Users.Interfaces;
 using Transcendence.Domain.Exceptions;
