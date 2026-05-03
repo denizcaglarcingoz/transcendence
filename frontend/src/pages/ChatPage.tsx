@@ -367,7 +367,7 @@ export function ChatPage() {
       setMessages(prev =>
         prev.map(message =>
           message.messageId === messageId
-            ? { ...message, isDeleted: true, content: 'Message deleted' }
+            ? { ...message, isDeleted: true, content: '🚫 This message was deleted' }
             : message
         )
       )
@@ -599,7 +599,7 @@ export function ChatPage() {
       setMessages(prev =>
         prev.map(item =>
           item.messageId === payload.messageId
-            ? { ...item, isDeleted: true, content: 'Message deleted' }
+            ? { ...item, isDeleted: true, content: '🚫 This message was deleted' }
             : item
         )
       )
@@ -994,10 +994,17 @@ export function ChatPage() {
 
               {!loadingMessages &&
                 messages
-                  .filter(message => !message.isDeleted)
                   .map(message => {
                     const isMine = message.senderId === currentUserId
                     const isDeleting = deletingMessageIds.includes(message.messageId)
+                    const isDeleted = message.isDeleted
+                    const messageBubbleClass = isMine
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-900'
+                    const messageDeletedClass = isDeleted
+                      ? 'opacity-70 italic'
+                      : ''
+                    const messageMetaClass = isMine ? 'text-blue-100' : 'text-gray-600'
 
                     return (
                       <div
@@ -1006,7 +1013,7 @@ export function ChatPage() {
                           isMine ? 'justify-end' : 'justify-start'
                         }`}
                       >
-                        {isMine && (
+                        {isMine && !isDeleted && (
                           <button
                             type="button"
                             onClick={() => void handleDeleteMessage(message.messageId)}
@@ -1020,9 +1027,9 @@ export function ChatPage() {
                         )}
 
                         <div
-                          className={`max-w-xs px-3 py-2 rounded-lg text-xs ${
-                            isMine ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
-                          } ${isDeleting ? 'opacity-50' : ''}`}
+                          className={`max-w-xs px-3 py-2 rounded-lg text-xs ${messageBubbleClass} ${
+                            isDeleting ? 'opacity-50' : ''
+                          } ${messageDeletedClass}`}
                         >
                           <div
                             className="whitespace-pre-wrap text-sm"
@@ -1032,9 +1039,7 @@ export function ChatPage() {
                           </div>
 
                           <div
-                            className={`text-xs mt-0.5 ${
-                              isMine ? 'text-blue-100' : 'text-gray-600'
-                            }`}
+                            className={`text-xs mt-0.5 ${messageMetaClass}`}
                           >
                             {new Date(message.createdAt).toLocaleTimeString([], {
                               hour: '2-digit',

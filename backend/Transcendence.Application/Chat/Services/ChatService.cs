@@ -41,6 +41,7 @@ public class ChatService : IChatService
             Content = message.Content,
             SenderId = message.SenderId,
             CreatedAt = message.CreatedAt,
+            IsDeleted = message.IsDeleted,
             IsReadByUser = message.SenderId == currentUserId || message.CreatedAt <= readByUser,
             IsReadByOthers =  message.CreatedAt <= readByOthers && message.SenderId == currentUserId
         };
@@ -238,9 +239,9 @@ public async Task DeleteMessageAsync(Guid userId, Guid messageId)
         throw new ForbiddenException("You can delete only your own messages.");
 
     message.Delete(DateTime.UtcNow);
-
-  
-    }
+    
+    await _messageRepository.SaveChangesAsync();
+}
     public async Task DeleteConversationAsync(
         Guid userId,
         Guid conversationId)

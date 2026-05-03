@@ -35,7 +35,7 @@ public Message(Guid conversationId, Guid userId, Guid clientMessageId, string co
 
         IsDeleted = true;
         DeletedAt = deletedAt;
-        Content = string.Empty;
+        Content = "🚫This message was deleted";
     }
 }
 
