@@ -1,5 +1,4 @@
 using Transcendence.Application.Common.Exceptions;
-using Transcendence.Application.Common.DTOs;
 using Transcendence.Application.Friends.DTOs;
 using Transcendence.Application.Friends.Exceptions;
 using Transcendence.Application.Friends.Interfaces;
@@ -168,19 +167,23 @@ public sealed class FriendsService : IFriendsService
         await _friendshipRepository.SaveChangesAsync(ct);
     }
 
-    private const int DefaultTake = 20;
-    private const int MaxTake = 50;
+	// GET friends/list
+	public async Task<CursorPageDto<FriendDto>> GetFriendsListAsync(
+		Guid userId,
+		int take,
+		string? cursor,
+		CancellationToken ct)
+	{
+		// Validate page size once in the service.
+		take = (take < 1 || take > 50) ? 20 : take;
 
-    // GET friends/list?take=20&cursor=<nextCursor>
-    public async Task<CursorPageDto<FriendDto>> GetFriendsListAsync(
-        Guid userId, int take, string? cursor, CancellationToken ct)
-    {
-        _ = await _userRepository.GetByIdAsync(userId, ct)
-            ?? throw new NotFoundException("User not found.");
+		// Make sure the authenticated user still exists.
+		_ = await _userRepository.GetByIdAsync(userId, ct)
+			?? throw new NotFoundException("User not found.");
 
-        if (take <= 0) take = DefaultTake;
-        if (take > MaxTake) take = MaxTake;
+		// Repository/query layer handles cursor pagination.
+		var list = await _friendsQuery.ListFriendsAsync(userId, take, cursor, ct);
 
-        return await _friendsQuery.ListFriendsAsync(userId, take, cursor, ct);
-    }
-}
+		return list;
+	}
+} 
