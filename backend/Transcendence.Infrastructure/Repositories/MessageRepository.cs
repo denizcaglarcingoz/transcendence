@@ -7,6 +7,7 @@ namespace Transcendence.Infrastructure.Repositories;
 public sealed class  MessageRepository : IMessageRepository
 {
     private readonly TranscendenceDbContext _db; 
+    
 
     public MessageRepository (TranscendenceDbContext db)
     {
@@ -64,31 +65,17 @@ public sealed class  MessageRepository : IMessageRepository
     {
         await _db.SaveChangesAsync();
     }
-    public async Task<IReadOnlyList<MessageDeliveredDto>> getUnreadMessagesAsync(Guid userId)
+    
+    public async Task<IReadOnlyList<Message>> GetUndeliveredIncomingMessagesAsync(Guid userId)
     {
-        return await _db.Messages
-            .Join(
-                _db.ConversationParticipants,
-                message => message.ConversationId,
-                participant => participant.ConversationId,
-                (message, participant) => new
-                {
-                    Message = message,
-                    Participant = participant
-                })
-            .Where(x => x.Participant.UserId == userId)
-            .Where(x => x.Message.SenderId != userId)
-            .Where(x =>
-                x.Participant.LastReadAt == null ||
-                x.Message.CreatedAt > x.Participant.LastReadAt)
-            .Select(x => new MessageDeliveredDto
-            {
-                ReaderId = userId,
-                SenderId = x.Message.SenderId,
-                MessageId = x.Message.Id
-            })
-            .ToListAsync();
+            return await _db.ConversationParticipants
+                                    .Where(p => p.UserId == userId )
+                                    .SelectMany(p => _db.Messages
+                                    .Where(m => m.ConversationId == p.ConversationId)
+                                    .Where(m=> !m.IsDeleted))
+                                    .ToListAsync();
     }
+
 }
 
  

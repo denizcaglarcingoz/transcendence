@@ -13,6 +13,8 @@ export type ChatMessageDto = {
   isReadByOthers: boolean
   createdAt: string
   isDeleted: boolean
+  isDelivered: boolean
+
 }
 
 export type ConversationDto = {

@@ -172,16 +172,12 @@ public sealed class ChatHub : Hub<IRealtimeClient>
     {
         var  userId = GetUserId(); 
         
-
+        var deliveredDto = await _chatService.MarkMessageAsDeliveredAsync(userId, messageId);
         await Clients
                 .Group(GroupNames.User(senderId))  
-                .MessageDelivered(new MessageDeliveredDto //send delivery event to all sender's active connections (multi-device support
-                {
-                    ReaderId = userId,
-                    MessageId = messageId                
-                });
+                .MessageDelivered(deliveredDto);
     }
-
+/*
     public  async Task MarkAsRead(Guid conversationId)
     {
         var  userId = GetUserId(); 
@@ -201,6 +197,32 @@ public sealed class ChatHub : Hub<IRealtimeClient>
                 MessageId = lastMessageId ?? Guid.Empty
             });
     } 
+
+    */
+    public async Task MarkAsRead(Guid conversationId)
+{
+    var userId = GetUserId();
+
+    await _chatService.MarkConversationAsRead(userId, conversationId);
+    await _notificationService.NotifyChange(userId);
+
+    var lastMessageId = await _chatService.GetLastMessageId(conversationId);
+
+    var participants = await _chatService.GetParticipantsIds(conversationId);
+    var senderIds = participants.Where(id => id != userId);
+
+    foreach (var senderId in senderIds)
+    {
+        await Clients
+            .Group(GroupNames.User(senderId))
+            .MessageRead(new MessageReadDto
+            {
+                ConversationId = conversationId,
+                ReaderId = userId,
+                MessageId = lastMessageId ?? Guid.Empty
+            });
+    }
+}
    
      private Guid GetUserId()
     {
@@ -231,11 +253,7 @@ public sealed class ChatHub : Hub<IRealtimeClient>
         {
                await Clients
                 .Group(GroupNames.User(m.SenderId))  
-                .MessageDelivered(new MessageDeliveredDto //send delivery event to all sender's active connections (multi-device support
-                {
-                    ReaderId = userId,
-                    MessageId = m.MessageId             
-                });
+                .MessageDelivered(m);
         }
     }
 

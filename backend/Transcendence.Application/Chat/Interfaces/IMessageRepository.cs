@@ -16,7 +16,7 @@ public interface IMessageRepository
     Task<int> GetUnreadCount(Guid conversationId, Guid userId, DateTimeOffset? LastRead);
      Task SaveChangesAsync();
      
-     Task<IReadOnlyList<MessageDeliveredDto>> getUnreadMessagesAsync(Guid userId);
+        Task<IReadOnlyList<Message>> GetUndeliveredIncomingMessagesAsync(Guid userId);
 }
 
 /*

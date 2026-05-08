@@ -6,6 +6,8 @@ import {
   createChatConnection,
   startConnection,
   markAllIncomingAsDelivered,
+  markAsDelivered,
+  type ChatMessageDto,
 } from '../api/chat.api'
 
 type RealtimeContextValue = {
@@ -54,7 +56,20 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       connection.on('OnlineUsersSnapshot', (users: string[]) => {
         setOnlineUserIds(users)
       })
+        connection.on('MessageReceived', (message: ChatMessageDto) => {
+          if (message.senderId === currentUserId) return
 
+          void markAsDelivered(
+            connection,
+            message.messageId,
+            message.conversationId,
+            message.senderId,
+          ).catch(err =>
+            console.error('Failed to mark message as delivered from realtime provider', err)
+          )
+
+          window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
+        })
       connection.on('UserOnLine', (payload: { userId: string }) => {
         setOnlineUserIds(prev =>
           prev.includes(payload.userId) ? prev : [...prev, payload.userId]
@@ -63,6 +78,11 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
       connection.on('UserOffLine', (payload: { userId: string }) => {
         setOnlineUserIds(prev => prev.filter(id => id !== payload.userId))
+      })
+
+     connection.onreconnecting(() => {
+        setIsConnected(false)
+        setOnlineUserIds([])
       })
 
       connection.onclose(() => {
@@ -78,6 +98,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
         void markAllIncomingAsDelivered(connection)
           .catch(err => console.error('Failed to mark incoming messages as delivered after reconnect', err))
+
+        window.dispatchEvent(new CustomEvent('notifications-visual-refresh'))
       })
 
       try {

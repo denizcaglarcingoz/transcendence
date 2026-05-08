@@ -242,10 +242,12 @@ async function handleCloseNotifications() {
     }
   }, [currentUserId, isNotificationsOpen])
 
-  useEffect(() => {
-    if (!currentUserId) return
-    void refreshNotificationsUi()
-  }, [currentUserId])
+    useEffect(() => {
+      if (!currentUserId) return
+      if (!isConnected) return
+
+      void refreshNotificationsUi()
+    }, [currentUserId, isConnected])
 
   useEffect(() => {
     if (!connection || !currentUserId || !isConnected) return

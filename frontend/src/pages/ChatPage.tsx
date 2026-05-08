@@ -64,7 +64,6 @@ export function ChatPage() {
   const [deletingConversationIds, setDeletingConversationIds] = useState<
     string[]
   >([]);
-  const [deliveredMessageIds, setDeliveredMessageIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<
     { id: string; username: string }[]
@@ -193,7 +192,6 @@ export function ChatPage() {
       setMessages(data);
       setMessagesOffset(data.length);
       setHasMoreMessages(data.length === limit);
-      setDeliveredMessageIds([]);
     } catch (err) {
       if (requestId !== messagesRequestIdRef.current) return;
       setError(err instanceof Error ? err.message : "Failed to load messages");
@@ -263,7 +261,6 @@ export function ChatPage() {
       activeConversationIdRef.current = conversationId;
       setActiveConversationId(conversationId);
       setMessages([]);
-      setDeliveredMessageIds([]);
       setMessagesOffset(0);
       setHasMoreMessages(true);
 
@@ -330,6 +327,8 @@ export function ChatPage() {
         isReadByUser: false,
         isReadByOthers: false,
         isDeleted: false,
+        isDelivered: false,
+
       };
 
       shouldScrollToBottomRef.current = true;
@@ -453,7 +452,6 @@ export function ChatPage() {
         activeConversationIdRef.current = null;
         setActiveConversationId(null);
         setMessages([]);
-        setDeliveredMessageIds([]);
         setMessagesOffset(0);
         setHasMoreMessages(true);
 
@@ -495,7 +493,6 @@ export function ChatPage() {
     setDraftTargetUserName(username);
 
     setMessages([]);
-    setDeliveredMessageIds([]);
     setMessagesOffset(0);
     setHasMoreMessages(false);
 
@@ -595,12 +592,6 @@ export function ChatPage() {
 
       if (isMine) return;
 
-      void markAsDelivered(
-        connection,
-        message.messageId,
-        message.conversationId,
-        message.senderId,
-      ).catch((err) => console.error("Failed to mark as delivered", err));
 
       if (isActive) {
         shouldScrollToBottomRef.current = true;
@@ -649,10 +640,13 @@ export function ChatPage() {
     };
 
     const handleMessageDelivered = (payload: MessageDeliveredDto) => {
-      setDeliveredMessageIds((prev) => {
-        if (prev.includes(payload.messageId)) return prev;
-        return [...prev, payload.messageId];
-      });
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.messageId === payload.messageId
+            ? { ...message, isDelivered: true }
+            : message,
+        ),
+      );
     };
 
     const handleMessageDeleted = (payload: { messageId: string }) => {
@@ -688,7 +682,6 @@ export function ChatPage() {
         activeConversationIdRef.current = null;
         setActiveConversationId(null);
         setMessages([]);
-        setDeliveredMessageIds([]);
         setMessagesOffset(0);
         setHasMoreMessages(true);
 
@@ -707,16 +700,32 @@ export function ChatPage() {
     };
 
     const handleMessageRead = (payload: MessageReadDto) => {
-      if (payload.conversationId === activeConversationIdRef.current) {
-        setMessages((prev) =>
-          prev.map((item) =>
-            item.messageId === payload.messageId &&
-            item.senderId === currentUserId
-              ? { ...item, isReadByOthers: true }
-              : item,
-          ),
+      setMessages((prev) => {
+        const readMessage = prev.find(
+          (item) => item.messageId === payload.messageId,
         );
-      }
+
+        if (!readMessage) return prev;
+
+        const readTime = new Date(readMessage.createdAt).getTime();
+
+        return prev.map((item) => {
+          const itemTime = new Date(item.createdAt).getTime();
+
+          const shouldMarkAsRead =
+            item.senderId === currentUserId &&
+            item.conversationId === payload.conversationId &&
+            itemTime <= readTime;
+
+          return shouldMarkAsRead
+            ? {
+                ...item,
+                isDelivered: true,
+                isReadByOthers: true,
+              }
+            : item;
+        });
+      });
     };
 
     const handleReconnected = async () => {
@@ -1070,7 +1079,6 @@ export function ChatPage() {
                   setDraftTargetUserId(null);
                   setDraftTargetUserName(null);
                   setMessages([]);
-                  setDeliveredMessageIds([]);
                   setMessagesOffset(0);
                   setHasMoreMessages(true);
 
@@ -1198,7 +1206,7 @@ export function ChatPage() {
                           <div className="mt-0.5 text-[10px] text-blue-100">
                             {message.isReadByOthers
                               ? t("chat.read")
-                              : deliveredMessageIds.includes(message.messageId)
+                              : message.isDelivered
                                 ? t("chat.delivered")
                                 : t("chat.sent")}
                           </div>
