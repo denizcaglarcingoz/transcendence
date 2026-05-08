@@ -867,448 +867,448 @@ export function ChatPage() {
       ? onlineUserIds.includes(activeConversation.targetUserId)
       : false;
 
-  return (
-    <div className="h-[calc(100dvh-136px)] bg-white overflow-hidden md:h-[calc(100dvh-170px)]">
-      <div className="mx-auto flex h-full w-full max-w-8xl flex-col overflow-hidden md:px-4 md:py-6">
-        <div className="panel flex min-h-0 flex-1 overflow-hidden rounded-none bg-gray-100 md:gap-4 md:rounded-2xl md:bg-transparent">
-          <aside
-            className={`min-h-0 w-full flex-col overflow-hidden bg-gray-200 md:flex md:w-[290px] md:flex-shrink-0 md:rounded-2xl md:bg-gray-300 md:p-3 ${
-              activeConversationId || shouldShowDraft
-                ? "hidden md:flex"
-                : "flex"
-            }`}
-          >
-            <div className="flex items-center justify-between border-b border-gray-300 px-4 py-3 md:border-b-0 md:px-0 md:py-0">
-              <h2 className="text-lg font-bold text-text md:mb-2 md:text-base">
-                {t("chat.chats")}
-              </h2>
-            </div>
+return (
+  <div className="h-[calc(100dvh-136px)] bg-white overflow-hidden md:h-[calc(100dvh-170px)]">
+    <div className="mx-auto flex h-full w-full max-w-8xl flex-col overflow-hidden md:px-4 md:py-6">
+      <div className="panel flex min-h-0 flex-1 overflow-hidden rounded-none bg-gray-100 md:gap-4 md:rounded-2xl md:bg-transparent">
+        <aside
+          className={`min-h-0 w-full flex-col overflow-hidden bg-gray-200 md:flex md:w-[290px] md:flex-shrink-0 md:rounded-2xl md:bg-gray-300 md:p-3 ${
+            activeConversationId || shouldShowDraft
+              ? "hidden md:flex"
+              : "flex"
+          }`}
+        >
+          <div className="flex items-center justify-between border-b border-gray-300 px-4 py-3 md:border-b-0 md:px-0 md:py-0">
+            <h2 className="text-lg font-bold text-text md:mb-2 md:text-base">
+              {t("chat.chats")}
+            </h2>
+          </div>
 
-            <div className="relative px-4 py-3 md:mb-2 md:px-0 md:py-0">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("chat.searchUsers")}
-                className="input w-full rounded-full bg-white text-sm md:text-xs"
-              />
+          <div className="relative px-4 py-3 md:mb-2 md:px-0 md:py-0">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("chat.searchUsers")}
+              className="input w-full rounded-full bg-white text-sm md:text-xs"
+            />
 
-              {searchResults.length > 0 && (
-                <div className="absolute left-4 right-4 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg md:left-0 md:right-0 md:max-h-32">
-                  {searchResults.map((userItem) => (
-                    <button
-                      key={userItem.id}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
+            {searchResults.length > 0 && (
+              <div className="absolute left-4 right-4 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg md:left-0 md:right-0 md:max-h-32">
+                {searchResults.map((userItem) => (
+                  <button
+                    key={userItem.id}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
 
-                        const existingConversation = conversations.find(
-                          (conversation) =>
-                            conversation.targetUserId === userItem.id,
-                        );
+                      const existingConversation = conversations.find(
+                        (conversation) =>
+                          conversation.targetUserId === userItem.id,
+                      );
 
-                        if (existingConversation) {
-                          setSearch("");
-                          void openConversation(existingConversation.id);
-                          return;
-                        }
-
-                        openDraftConversation(userItem.id, userItem.username);
+                      if (existingConversation) {
                         setSearch("");
-                      }}
-                      className="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 md:px-2 md:py-1 md:text-xs"
-                    >
-                      <div className="font-medium text-gray-900">
-                        {userItem.username}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                        void openConversation(existingConversation.id);
+                        return;
+                      }
 
-            {error && (
-              <p className="mx-4 mb-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-500 md:mx-0">
-                {error}
-              </p>
+                      openDraftConversation(userItem.id, userItem.username);
+                      setSearch("");
+                    }}
+                    className="block w-full border-b border-gray-100 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 md:px-2 md:py-1 md:text-xs"
+                  >
+                    <div className="font-medium text-gray-900">
+                      {userItem.username}
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
+          </div>
 
-            <div
-              ref={conversationsContainerRef}
-              className="min-h-0 flex-1 overflow-y-auto px-2 pb-3 md:px-0 md:pr-1"
-            >
-              {shouldShowDraft && (
-                <button
-                  type="button"
-                  className="mb-1 w-full rounded-xl border border-gray-500 bg-gray-400 p-3 text-left transition-all md:p-1.5"
-                >
-                  <div className="flex items-center gap-3 md:gap-1.5">
-                    <img
-                      src="https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg"
-                      alt={draftTargetUserName ?? "New chat"}
-                      className="h-11 w-11 flex-shrink-0 rounded-full object-cover md:h-5 md:w-5"
-                    />
+          {error && (
+            <p className="mx-4 mb-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-500 md:mx-0">
+              {error}
+            </p>
+          )}
 
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-gray-900 md:text-xs">
-                        {draftTargetUserName}
-                      </div>
-
-                      <div className="truncate text-sm text-gray-600 md:text-xs">
-                        New chat
-                      </div>
-                    </div>
-
-                    <span
-                      className={`inline-block h-3 w-3 rounded-full ring-1 ring-gray-300 md:h-2.5 md:w-2.5 ${
-                        isDraftTargetOnline ? "bg-green-500" : "bg-gray-400"
-                      }`}
-                    />
-                  </div>
-                </button>
-              )}
-
-              {conversations.length === 0 && !draftTargetUserId ? (
-                <p className="py-6 text-center text-sm text-gray-600 md:py-2 md:text-xs">
-                  {t("chat.selectConversation")}
-                </p>
-              ) : (
-                <>
-                  {conversations.map((conversation) => {
-                    const isOnline = onlineUserIds.includes(
-                      conversation.targetUserId,
-                    );
-                    const isDeletingConversation =
-                      deletingConversationIds.includes(conversation.id);
-
-                    const avatarSrc = conversation.targetUserAvatarUrl
-                      ? `${import.meta.env.VITE_API_BASE_URL}${conversation.targetUserAvatarUrl}`
-                      : "https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg";
-
-                    return (
-                      <div
-                        key={conversation.id}
-                        className={`group mb-1 flex w-full items-center rounded-xl transition-all md:rounded-lg ${
-                          conversation.id === activeConversationId
-                            ? "border border-gray-500 bg-gray-400"
-                            : "bg-white hover:bg-gray-100 md:bg-gray-200"
-                        } ${isDeletingConversation ? "opacity-50" : ""}`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => void openConversation(conversation.id)}
-                          className="min-w-0 flex-1 p-3 text-left md:p-1.5"
-                        >
-                          <div className="flex items-center gap-3 md:gap-1.5">
-                            <img
-                              src={avatarSrc}
-                              onError={(event) => {
-                                event.currentTarget.src =
-                                  "https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg";
-                              }}
-                              alt={conversation.targetUserName}
-                              className="h-11 w-11 flex-shrink-0 rounded-full object-cover md:h-5 md:w-5"
-                            />
-
-                            <div className="min-w-0 flex-1">
-                              <div className="truncate text-sm font-semibold text-gray-900 md:text-xs">
-                                {conversation.targetUserName}
-                              </div>
-
-                              <div className="truncate text-sm text-gray-600 md:text-xs">
-                                {conversation.lastMessage ||
-                                  t("chat.noMessagesYet")}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-shrink-0 items-center gap-2 md:gap-1">
-                              {conversation.unreadCount > 0 && (
-                                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white md:h-4 md:min-w-4">
-                                  {conversation.unreadCount}
-                                </span>
-                              )}
-
-                              <span
-                                className={`inline-block h-3 w-3 rounded-full ring-1 ring-gray-300 md:h-2.5 md:w-2.5 ${
-                                  isOnline ? "bg-green-500" : "bg-gray-400"
-                                }`}
-                              />
-                            </div>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDeleteConversation(conversation.id);
-                          }}
-                          disabled={isDeletingConversation}
-                          aria-label="Delete conversation"
-                          title="Delete conversation"
-                          className="mr-2 flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-all hover:bg-red-100 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 md:mr-1 md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    );
-                  })}
-
-                  {loadingMoreConversations && (
-                    <div className="py-3 text-center text-xs text-gray-500">
-                      {t("common.loading")}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </aside>
-
-          <main
-            className={`min-h-0 w-full flex-col overflow-hidden bg-gray-100 md:flex md:flex-1 md:rounded-2xl md:bg-gray-300 md:p-3 ${
-              activeConversationId || shouldShowDraft
-                ? "flex"
-                : "hidden md:flex"
-            }`}
+          <div
+            ref={conversationsContainerRef}
+            className="min-h-0 flex-1 overflow-y-auto px-2 pb-3 md:px-0 md:pr-1"
           >
-            <div className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-3 md:hidden">
+            {shouldShowDraft && (
               <button
                 type="button"
-                onClick={() => {
-                  activeConversationIdRef.current = null;
-                  setActiveConversationId(null);
-                  setDraftTargetUserId(null);
-                  setDraftTargetUserName(null);
-                  setMessages([]);
-                  setMessagesOffset(0);
-                  setHasMoreMessages(true);
-
-                  window.dispatchEvent(
-                    new CustomEvent("active-chat-changed", {
-                      detail: { conversationId: null },
-                    }),
-                  );
-                }}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-gray-700 hover:bg-gray-100"
-                aria-label="Back to chats"
+                className="mb-1 w-full rounded-xl border border-gray-500 bg-gray-400 p-3 text-left transition-all md:p-1.5"
               >
-                ‹
-              </button>
+                <div className="flex items-center gap-3 md:gap-1.5">
+                  <img
+                    src="https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg"
+                    alt={draftTargetUserName ?? t("chat.newChat")}
+                    className="h-11 w-11 flex-shrink-0 rounded-full object-cover md:h-5 md:w-5"
+                  />
 
-              <img
-                src={activeAvatarSrc}
-                onError={(event) => {
-                  event.currentTarget.src =
-                    "https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg";
-                }}
-                alt={activeTitle ?? "Chat"}
-                className="h-10 w-10 rounded-full object-cover"
-              />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-gray-900 md:text-xs">
+                      {draftTargetUserName}
+                    </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-gray-900">
-                  {activeTitle}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {isActiveUserOnline ? "Online" : "Offline"}
-                </div>
-              </div>
-            </div>
-
-            <div
-              ref={messagesContainerRef}
-              className="min-h-0 flex-1 space-y-1 overflow-y-auto bg-white p-3 md:mb-1.5 md:rounded-lg md:p-2"
-            >
-              {!activeConversationId &&
-                !shouldShowDraft &&
-                !loadingMessages && (
-                  <div className="py-6 text-center text-sm text-gray-500 md:py-2 md:text-xs">
-                    {t("chat.selectConversation")}
+                    <div className="truncate text-sm text-gray-600 md:text-xs">
+                      {t("chat.newChat")}
+                    </div>
                   </div>
-                )}
 
-              {shouldShowDraft && (
-                <div className="py-3 text-center text-xs text-gray-500">
-                  New chat with {draftTargetUserName}
+                  <span
+                    className={`inline-block h-3 w-3 rounded-full ring-1 ring-gray-300 md:h-2.5 md:w-2.5 ${
+                      isDraftTargetOnline ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  />
                 </div>
-              )}
+              </button>
+            )}
 
-              {loadingMessages && (
-                <div className="py-3 text-center text-xs text-gray-500">
-                  {t("chat.loadingMessages")}
-                </div>
-              )}
-
-              {loadingOlderMessages && (
-                <div className="py-3 text-center text-xs text-gray-500">
-                  {t("chat.loadingMessages")}
-                </div>
-              )}
-
-              {!loadingMessages &&
-                messages.map((message) => {
-                  const isMine = message.senderId === currentUserId;
-                  const isDeleting = deletingMessageIds.includes(
-                    message.messageId,
+            {conversations.length === 0 && !draftTargetUserId ? (
+              <p className="py-6 text-center text-sm text-gray-600 md:py-2 md:text-xs">
+                {t("chat.selectConversation")}
+              </p>
+            ) : (
+              <>
+                {conversations.map((conversation) => {
+                  const isOnline = onlineUserIds.includes(
+                    conversation.targetUserId,
                   );
-                  const isDeleted = message.isDeleted;
-                  const messageBubbleClass = isMine
-                    ? "bg-blue-500 text-white rounded-br-sm"
-                    : "bg-gray-200 text-gray-900 rounded-bl-sm";
-                  const messageDeletedClass = isDeleted
-                    ? "opacity-70 italic"
-                    : "";
-                  const messageMetaClass = isMine
-                    ? "text-blue-100"
-                    : "text-gray-600";
+                  const isDeletingConversation =
+                    deletingConversationIds.includes(conversation.id);
+
+                  const avatarSrc = conversation.targetUserAvatarUrl
+                    ? `${import.meta.env.VITE_API_BASE_URL}${conversation.targetUserAvatarUrl}`
+                    : "https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg";
 
                   return (
                     <div
-                      key={message.messageId}
-                      className={`group flex items-end gap-1 ${
-                        isMine ? "justify-end" : "justify-start"
-                      }`}
+                      key={conversation.id}
+                      className={`group mb-1 flex w-full items-center rounded-xl transition-all md:rounded-lg ${
+                        conversation.id === activeConversationId
+                          ? "border border-gray-500 bg-gray-400"
+                          : "bg-white hover:bg-gray-100 md:bg-gray-200"
+                      } ${isDeletingConversation ? "opacity-50" : ""}`}
                     >
-                      {isMine && !isDeleted && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            void handleDeleteMessage(message.messageId)
-                          }
-                          disabled={isDeleting}
-                          aria-label="Delete message"
-                          title="Delete message"
-                          className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 opacity-100 transition-all hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40 md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100"
-                        >
-                          ×
-                        </button>
-                      )}
-
-                      <div
-                        className={`max-w-[78%] rounded-2xl px-3 py-2 text-xs shadow-sm md:max-w-xs md:rounded-lg ${messageBubbleClass} ${
-                          isDeleting ? "opacity-50" : ""
-                        } ${messageDeletedClass}`}
+                      <button
+                        type="button"
+                        onClick={() => void openConversation(conversation.id)}
+                        className="min-w-0 flex-1 p-3 text-left md:p-1.5"
                       >
-                        <div
-                          className="whitespace-pre-wrap text-sm leading-snug"
-                          style={{ overflowWrap: "anywhere" }}
-                        >
-                          {message.content}
-                        </div>
+                        <div className="flex items-center gap-3 md:gap-1.5">
+                          <img
+                            src={avatarSrc}
+                            onError={(event) => {
+                              event.currentTarget.src =
+                                "https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg";
+                            }}
+                            alt={conversation.targetUserName}
+                            className="h-11 w-11 flex-shrink-0 rounded-full object-cover md:h-5 md:w-5"
+                          />
 
-                        <div className={`mt-1 text-[10px] ${messageMetaClass}`}>
-                          {new Date(message.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-semibold text-gray-900 md:text-xs">
+                              {conversation.targetUserName}
+                            </div>
 
-                        {isMine && (
-                          <div className="mt-0.5 text-[10px] text-blue-100">
-                            {message.isReadByOthers
-                              ? t("chat.read")
-                              : message.isDelivered
-                                ? t("chat.delivered")
-                                : t("chat.sent")}
+                            <div className="truncate text-sm text-gray-600 md:text-xs">
+                              {conversation.lastMessage ||
+                                t("chat.noMessagesYet")}
+                            </div>
                           </div>
-                        )}
-                      </div>
+
+                          <div className="flex flex-shrink-0 items-center gap-2 md:gap-1">
+                            {conversation.unreadCount > 0 && (
+                              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white md:h-4 md:min-w-4">
+                                {conversation.unreadCount}
+                              </span>
+                            )}
+
+                            <span
+                              className={`inline-block h-3 w-3 rounded-full ring-1 ring-gray-300 md:h-2.5 md:w-2.5 ${
+                                isOnline ? "bg-green-500" : "bg-gray-400"
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleDeleteConversation(conversation.id);
+                        }}
+                        disabled={isDeletingConversation}
+                        aria-label={t("chat.deleteConversation")}
+                        title={t("chat.deleteConversation")}
+                        className="mr-2 flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-all hover:bg-red-100 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 md:mr-1 md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100"
+                      >
+                        ×
+                      </button>
                     </div>
                   );
                 })}
 
-              <div ref={messagesEndRef} />
-            </div>
+                {loadingMoreConversations && (
+                  <div className="py-3 text-center text-xs text-gray-500">
+                    {t("common.loading")}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </aside>
 
-            <div className="flex-shrink-0 border-t border-gray-200 bg-white p-2 md:border-t-0 md:bg-transparent md:p-0">
-              <div className="flex items-end gap-2 md:flex-col md:gap-4">
-                <textarea
-                  value={text}
-                  maxLength={150}
-                  rows={1}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Message..."
-                  className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-black md:w-full md:rounded-xl md:border-panel md:bg-white md:px-4 md:py-5 md:text-xs"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      void handleSend();
-                    }
-                  }}
-                />
+        <main
+          className={`min-h-0 w-full flex-col overflow-hidden bg-gray-100 md:flex md:flex-1 md:rounded-2xl md:bg-gray-300 md:p-3 ${
+            activeConversationId || shouldShowDraft
+              ? "flex"
+              : "hidden md:flex"
+          }`}
+        >
+          <div className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-3 md:hidden">
+            <button
+              type="button"
+              onClick={() => {
+                activeConversationIdRef.current = null;
+                setActiveConversationId(null);
+                setDraftTargetUserId(null);
+                setDraftTargetUserName(null);
+                setMessages([]);
+                setMessagesOffset(0);
+                setHasMoreMessages(true);
 
-                <div className="flex items-center gap-2 md:w-full md:flex-col md:items-stretch">
-                  <p className="hidden text-sm text-gray-500 md:block">
-                    {text.length}/150
-                  </p>
+                window.dispatchEvent(
+                  new CustomEvent("active-chat-changed", {
+                    detail: { conversationId: null },
+                  }),
+                );
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-2xl text-gray-700 hover:bg-gray-100"
+              aria-label={t("chat.backToChats")}
+            >
+              ‹
+            </button>
 
-                  <button
-                    type="button"
-                    onClick={() => void handleSend()}
-                    disabled={sending || !text.trim() || !currentUserId}
-                    className="flex h-11 min-w-11 items-center justify-center rounded-full bg-blue-500 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:bg-gray-200 disabled:text-gray-400 md:ml-auto md:h-[40px] md:min-w-[140px] md:rounded-xl"
-                  >
-                    <span className="md:hidden">➤</span>
-                    <span className="hidden md:inline">
-                      {sending ? t("common.loading") : t("chat.send")}
-                    </span>
-                  </button>
-                </div>
+            <img
+              src={activeAvatarSrc}
+              onError={(event) => {
+                event.currentTarget.src =
+                  "https://media.moddb.com/cache/images/groups/1/37/36085/thumb_620x2000/Unknown_person.jpg";
+              }}
+              alt={activeTitle ?? t("chat.chats")}
+              className="h-10 w-10 rounded-full object-cover"
+            />
+
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-gray-900">
+                {activeTitle}
+              </div>
+              <div className="text-xs text-gray-500">
+                {isActiveUserOnline ? t("chat.online") : t("chat.offline")}
               </div>
             </div>
-          </main>
-        </div>
+          </div>
 
-        <div className="hidden md:block">
-          <BottomNav active="messages" />
-        </div>
+          <div
+            ref={messagesContainerRef}
+            className="min-h-0 flex-1 space-y-1 overflow-y-auto bg-white p-3 md:mb-1.5 md:rounded-lg md:p-2"
+          >
+            {!activeConversationId &&
+              !shouldShowDraft &&
+              !loadingMessages && (
+                <div className="py-6 text-center text-sm text-gray-500 md:py-2 md:text-xs">
+                  {t("chat.selectConversation")}
+                </div>
+              )}
+
+            {shouldShowDraft && (
+              <div className="py-3 text-center text-xs text-gray-500">
+                {t("chat.newChatWith", { name: draftTargetUserName })}
+              </div>
+            )}
+
+            {loadingMessages && (
+              <div className="py-3 text-center text-xs text-gray-500">
+                {t("chat.loadingMessages")}
+              </div>
+            )}
+
+            {loadingOlderMessages && (
+              <div className="py-3 text-center text-xs text-gray-500">
+                {t("chat.loadingMessages")}
+              </div>
+            )}
+
+            {!loadingMessages &&
+              messages.map((message) => {
+                const isMine = message.senderId === currentUserId;
+                const isDeleting = deletingMessageIds.includes(
+                  message.messageId,
+                );
+                const isDeleted = message.isDeleted;
+                const messageBubbleClass = isMine
+                  ? "bg-blue-500 text-white rounded-br-sm"
+                  : "bg-gray-200 text-gray-900 rounded-bl-sm";
+                const messageDeletedClass = isDeleted
+                  ? "opacity-70 italic"
+                  : "";
+                const messageMetaClass = isMine
+                  ? "text-blue-100"
+                  : "text-gray-600";
+
+                return (
+                  <div
+                    key={message.messageId}
+                    className={`group flex items-end gap-1 ${
+                      isMine ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    {isMine && !isDeleted && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void handleDeleteMessage(message.messageId)
+                        }
+                        disabled={isDeleting}
+                        aria-label={t("chat.deleteMessage")}
+                        title={t("chat.deleteMessage")}
+                        className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 opacity-100 transition-all hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40 md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100"
+                      >
+                        ×
+                      </button>
+                    )}
+
+                    <div
+                      className={`max-w-[78%] rounded-2xl px-3 py-2 text-xs shadow-sm md:max-w-xs md:rounded-lg ${messageBubbleClass} ${
+                        isDeleting ? "opacity-50" : ""
+                      } ${messageDeletedClass}`}
+                    >
+                      <div
+                        className="whitespace-pre-wrap text-sm leading-snug"
+                        style={{ overflowWrap: "anywhere" }}
+                      >
+                        {message.content}
+                      </div>
+
+                      <div className={`mt-1 text-[10px] ${messageMetaClass}`}>
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+
+                      {isMine && (
+                        <div className="mt-0.5 text-[10px] text-blue-100">
+                          {message.isReadByOthers
+                            ? t("chat.read")
+                            : message.isDelivered
+                              ? t("chat.delivered")
+                              : t("chat.sent")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="flex-shrink-0 border-t border-gray-200 bg-white p-2 md:border-t-0 md:bg-transparent md:p-0">
+            <div className="flex items-end gap-2 md:flex-col md:gap-4">
+              <textarea
+                value={text}
+                maxLength={150}
+                rows={1}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={t("chat.placeholder")}
+                className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-black md:w-full md:rounded-xl md:border-panel md:bg-white md:px-4 md:py-5 md:text-xs"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void handleSend();
+                  }
+                }}
+              />
+
+              <div className="flex items-center gap-2 md:w-full md:flex-col md:items-stretch">
+                <p className="hidden text-sm text-gray-500 md:block">
+                  {text.length}/150
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => void handleSend()}
+                  disabled={sending || !text.trim() || !currentUserId}
+                  className="flex h-11 min-w-11 items-center justify-center rounded-full bg-blue-500 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:bg-gray-200 disabled:text-gray-400 md:ml-auto md:h-[40px] md:min-w-[140px] md:rounded-xl"
+                >
+                  <span className="md:hidden">➤</span>
+                  <span className="hidden md:inline">
+                    {sending ? t("common.loading") : t("chat.send")}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
 
-      {pendingDeleteMessageId && (
-        <Modal title={t("chat.deleteMessage")} onClose={cancelDeleteMessage}>
-          <p className="mb-6 text-gray-700">{t("chat.areYouSure")}</p>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={cancelDeleteMessage}
-              className="rounded-lg bg-gray-200 px-4 py-2 text-gray-900 transition-colors hover:bg-gray-300"
-            >
-              {t("chat.cancel")}
-            </button>
-            <button
-              type="button"
-              onClick={() => void confirmDeleteMessage()}
-              className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
-            >
-              {t("chat.delete")}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {pendingDeleteConversationId && (
-        <Modal
-          title={t("chat.deleteConversation")}
-          onClose={cancelDeleteConversation}
-        >
-          <p className="mb-6 text-gray-700">{t("chat.areYouSure")}</p>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={cancelDeleteConversation}
-              className="rounded-lg bg-gray-200 px-4 py-2 text-gray-900 transition-colors hover:bg-gray-300"
-            >
-              {t("chat.cancel")}
-            </button>
-            <button
-              type="button"
-              onClick={() => void confirmDeleteConversation()}
-              className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
-            >
-              {t("chat.delete")}
-            </button>
-          </div>
-        </Modal>
-      )}
+      <div className="hidden md:block">
+        <BottomNav active="messages" />
+      </div>
     </div>
-  );
+
+    {pendingDeleteMessageId && (
+      <Modal title={t("chat.deleteMessage")} onClose={cancelDeleteMessage}>
+        <p className="mb-6 text-gray-700">{t("chat.areYouSure")}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={cancelDeleteMessage}
+            className="rounded-lg bg-gray-200 px-4 py-2 text-gray-900 transition-colors hover:bg-gray-300"
+          >
+            {t("chat.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmDeleteMessage()}
+            className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
+          >
+            {t("chat.delete")}
+          </button>
+        </div>
+      </Modal>
+    )}
+
+    {pendingDeleteConversationId && (
+      <Modal
+        title={t("chat.deleteConversation")}
+        onClose={cancelDeleteConversation}
+      >
+        <p className="mb-6 text-gray-700">{t("chat.areYouSure")}</p>
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={cancelDeleteConversation}
+            className="rounded-lg bg-gray-200 px-4 py-2 text-gray-900 transition-colors hover:bg-gray-300"
+          >
+            {t("chat.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmDeleteConversation()}
+            className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
+          >
+            {t("chat.delete")}
+          </button>
+        </div>
+      </Modal>
+    )}
+  </div>
+);
 }
