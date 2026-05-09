@@ -26,8 +26,8 @@ export async function getPost(postId: string): Promise<PostDto> {
   return response.data.data
 }
 
-export async function sharePost(data: Partial<CreatePostDto>) {
-  const response = await api.post('/posts', data)
+export async function sharePost(data: Partial<CreatePostDto>, signal?: AbortSignal,) {
+  const response = await api.post('/posts', data, { signal })
   return response.data
 }
 
