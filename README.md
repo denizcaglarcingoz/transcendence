@@ -44,10 +44,10 @@ Transcendence is a private social application that brings together authenticatio
 
 | Member | Role | GitHub | Primary focus |
 |---|---|---|---|
-| **Deniz** | **Product Owner (PO) & Project Manager (PM)** [@denniscingoz](https://github.com/denniscingoz) | Vision, scope, acceptance criteria | Design | Planning, coordination, delivery |
+| **Deniz** | **Product Owner (PO) & Project Manager (PM)** | [@denniscingoz](https://github.com/denniscingoz) | Vision, scope, acceptance criteria, design, planning, coordination, delivery |
 | **Daria** | **Tech Lead** | [@grignetta](https://github.com/grignetta) | Architecture, code review, technical direction, database |
 | **Valerii** | **Backend Developer** | [@Vbezhevets](https://github.com/Vbezhevets) | Realtime features with SignalR |
-| **Michaela** | **Frontend Developer** | [@michaela811](https://github.com/michaela811) | Frontend application |
+| **Michaelaela** | **Frontend Developer** | [@Michaelaela811](https://github.com/Michaelaela811) | Frontend application |
 
 > _Roles were assigned at kickoff and remained stable through the project. All members contributed to code, and everyone tested the system and fixed bugs across the codebase; the role headings indicate primary responsibility, not exclusive ownership._
 
@@ -111,42 +111,50 @@ We selected **4 Major** and **7 Minor** modules for a total of **15 points**.
 
 ## Features and ownership
 
-| Area | Feature | Owner | Status |
-|---|---|---|---|
-| **Auth** | Email/password sign-up & sign-in (UI) | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Google OAuth 2.0 sign-in | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | JWT handling, refresh, sign-out | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | 2FA enrolment + verification | _[Name]_ | ✅ / _[remove if N/A]_ |
-| **Profile** | View own profile | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | View other users' profiles | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Edit profile + change password | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Avatar upload with default fallback | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Account deletion | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | User search | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| **Posts** | Feed | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Profile posts | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Create / delete post | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Comments | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Likes | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| **Friends** | Send / accept / decline requests | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Friends list + remove friend | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Online status indicator | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| **Files** | Upload + validation (type/size) | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Protected access control | _[Name]_ (BE) | ✅ |
-| | Image preview + progress | Michaela | ✅ |
-| | Delete uploaded files | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| **Notifications** | Create / read events | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Unread counter | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Mark as read | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| **Chat** | Real-time messaging via SignalR | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Conversation list + history | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| | Reconnection / disconnection handling | Michaela (FE) / _[Name]_ (BE) | ✅ |
-| **i18n** | Translation files (3 languages) | Michaela | ✅ |
-| | Language switcher | Michaela | ✅ |
-| **Design system** | 10+ reusable components | _[Name]_ | ✅ |
-| **Infra** | Docker Compose + Nginx reverse proxy | _[Name]_ | ✅ |
-| | Local TLS certs | _[Name]_ | ✅ |
-| | DB backup / restore scripts | _[Name]_ | ✅ |
+| Area | Feature | Frontend | Backend | Status |
+|---|---|---|---|---|
+| **Auth** | Email/password sign-up & sign-in | Michaela | Deniz | ✅ |
+| | Google OAuth 2.0 sign-in | Michaela | Deniz | ✅ |
+| | JWT issuance + sign-out | Michaela | Deniz | ✅ |
+| **Profile** | View own profile | Michaela | Deniz | ✅ |
+| | View other users' profiles | Michaela | Deniz | ✅ |
+| | Edit profile + change password | Michaela | Deniz | ✅ |
+| | Avatar upload with default fallback | Michaela | Deniz | ✅ |
+| | Account deletion | Michaela | Deniz | ✅ |
+| | User search | Michaela | Deniz | ✅ |
+| **Posts** | Feed (cursor-paginated) | Michaela | Deniz | ✅ |
+| | Profile posts (own + other users) | Michaela | Deniz | ✅ |
+| | Create / delete post | Michaela | Deniz | ✅ |
+| | Comments (cursor-paginated) | Michaela | Deniz | ✅ |
+| | Likes + likes list | Michaela | Deniz | ✅ |
+| **Friends** | Send / accept / decline requests | Michaela | Deniz | ✅ |
+| | Friends list (cursor-paginated) + remove | Michaela | Deniz | ✅ |
+| **Presence** | Online users tracking | — | Valeriy | ✅ |
+| | Online status in friends list & chat | Michaela | Valeriy | ✅ |
+| | Presence broadcast on connect/disconnect | — | Valeriy | ✅ |
+| **Files** | Upload with type/size/magic-byte validation | Deniz | Deniz | ✅ |
+| | Friends-only access control | — | Deniz | ✅ |
+| | Image/video preview + upload progress | Deniz | — | ✅ |
+| | Delete uploaded files | Deniz | Deniz | ✅ |
+| **Notifications** | Persisted notifications (DB) | Michaela | Valeriy | ✅ |
+| | Realtime notification events (SignalR) | Michaela | Valeriy | ✅ |
+| | Unread counter | Michaela | Valeriy | ✅ |
+| | Mark as read (single, all, by conversation) | Michaela | Valeriy | ✅ |
+| **Chat** | Real-time messaging via SignalR | Michaela | Valeriy | ✅ |
+| | Conversation list + message history (paginated) | Michaela | Valeriy | ✅ |
+| | Read / delivery receipts | Michaela | Valeriy | ✅ |
+| | Soft-delete messages | Michaela | Valeriy | ✅ |
+| | Delete conversations | Michaela | Valeriy | ✅ |
+| | Reconnection handling | Michaela | Valeriy | ✅ |
+| **i18n** | Translation files (EN, ES, FR) | Michaela | — | ✅ |
+| | Runtime language switcher | Michaela | — | ✅ |
+| **Design system** | Reusable UI components (Modal, BottomNav, Field, LanguageDropdown, UploadProgressOverlay, ProtectedPostThumb, …) | Michaela | — | ✅ |
+| | Shared CSS utilities (`.btn-*`, `.input`, `.card`, `.panel`, `.divider`, `.message-*`) | Michaela | — | ✅ |
+| **Infra** | Docker Compose (db + api + nginx) | — | Daria | ✅ |
+| | Nginx reverse proxy + WebSocket upgrade | — | Daria | ✅ |
+| | Local TLS certs (self-signed) | — | Daria | ✅ |
+| | DB backup / restore scripts | — | Daria | ✅ |
+| | EF Core migrations applied on startup | — | Daria | ✅ |
 
 ---
 
@@ -157,22 +165,26 @@ We selected **4 Major** and **7 Minor** modules for a total of **15 points**.
 | Choice | Why |
 |---|---|
 | **ASP.NET Core Web API** | Mature, cross-platform, opinionated. Strong typing end-to-end and excellent OpenAPI tooling support. |
-| **C# / .NET** | Performance, a rich BCL, and first-class async — ideal for WebSocket-heavy workloads. |
-| **Entity Framework Core** | Code-first migrations, LINQ queries, and a strict mapping layer between domain models and persistence — directly satisfies the **ORM minor module**. |
-| **SignalR** | Battle-tested abstraction over WebSockets with built-in fallback, group/user targeting, and reconnection — drastically reduces the surface area of the **real-time major module**. |
+| **C# / .NET 8** | Performance, a rich BCL, and first-class async — ideal for WebSocket-heavy workloads. |
+| **Entity Framework Core (Npgsql)** | Code-first migrations, LINQ queries, and a strict mapping layer between domain models and persistence — directly satisfies the **ORM minor module**. |
+| **SignalR** | Battle-tested abstraction over WebSockets with built-in transport fallback, group/user targeting, and reconnection — drastically reduces the surface area of the **real-time major module**. |
 | **JWT bearer auth** | Stateless, plays well with SPAs, and integrates cleanly with both local and Google OAuth identity flows. |
-| **Swagger / OpenAPI** | Auto-generated, always-current API contract — used by the frontend's typed clients. |
+| **Google.Apis.Auth** | Server-side verification of Google ID tokens before issuing our own JWT. |
+| **Swagger / OpenAPI** | Auto-generated API documentation for development and debugging. |
 
 ### Frontend — React + TypeScript
 
 | Choice | Why |
 |---|---|
 | **React + Vite** | Fast dev server, instant HMR, ecosystem maturity. Vite's ESM-native dev experience is materially faster than CRA/webpack for a project this size. |
-| **TypeScript** | Catches whole classes of bugs at compile time, especially around API payload shapes. Pairs well with the OpenAPI-generated types. |
+| **TypeScript** | Catches whole classes of bugs at compile time, especially around API payload shapes that match the backend DTOs. |
 | **React Router** | Declarative routing with nested routes, naturally maps to our protected-route model via `RequireAuth`. |
-| **TanStack Query** | Eliminates almost all of the boilerplate around server state (cache, dedupe, retries, refetch), and makes optimistic updates straightforward. |
-| **Axios** | Interceptors for token attachment, refresh, and centralised error handling. |
-| **i18next** | Industry-standard i18n with namespace splitting, pluralisation, and runtime language switching — directly satisfies the **multi-language minor module**. |
+| **TanStack Query** | Eliminates server-state boilerplate (cache, dedupe, retries, refetch) and powers all data fetching across feed, posts, comments, friends, and profile. |
+| **React Hook Form** | Lightweight form state and validation for the sign-in / sign-up flows. |
+| **Axios** | Interceptors for token attachment and 401 handling. |
+| **`@microsoft/signalr` client** | Official client for the chat hub, with auto-reconnect wired through `RealtimeProvider`. |
+| **`@react-oauth/google`** | Drop-in Google sign-in button that returns an ID token for backend verification. |
+| **i18next** | Industry-standard i18n with runtime language switching across three languages — directly satisfies the **multi-language minor module**. |
 | **MSW** | Lets the frontend run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback. |
 | **Tailwind CSS** | Utility-first, design-system-friendly. Tailwind tokens back our **custom design system minor module**. |
 
@@ -181,6 +193,7 @@ We selected **4 Major** and **7 Minor** modules for a total of **15 points**.
 | Choice | Why |
 |---|---|
 | **Docker Compose** | One-command spin-up for the database, API, and reverse proxy. Reproducible across team machines. |
+| **Makefile** | Thin wrapper around the common Docker Compose flows (`make up`, `make down`, `make fclean`, `make backup-db`, `make restore-db`). Hides container plumbing behind a single shared interface so every team member runs the same commands. |
 | **Nginx** | Reverse proxy, TLS termination, and WebSocket upgrade handling for SignalR. |
 | **PostgreSQL 16** | Mature, strict, and a great fit for the relational shape of our domain (users, friendships, posts, comments). |
 | **Self-signed dev certificates** | Necessary for testing TLS and secure WebSocket flows locally without a public domain. |
@@ -191,10 +204,10 @@ We selected **4 Major** and **7 Minor** modules for a total of **15 points**.
 
 ```
 ┌──────────────────────┐        ┌──────────────────────────┐
-│      Browser         │        │          Nginx           │
-│  React SPA (Vite)    │ HTTPS  │   reverse proxy + TLS    │
-│  TanStack Query      │ ─────► │   /api  → API container  │
-│  SignalR client      │  WSS   │   /hubs → API container  │
+│      Browser         │ HTTPS  │          Nginx           │
+│  React SPA (Vite)    │ ◄────► │   reverse proxy + TLS    │
+│  TanStack Query      │  WSS   │   /api  → API container  │
+│  SignalR client      │        │   /hubs → API container  │
 └──────────────────────┘        │   /     → static SPA     │
                                 └────────────┬─────────────┘
                                              │
@@ -202,29 +215,27 @@ We selected **4 Major** and **7 Minor** modules for a total of **15 points**.
                        ┌─────────────────────────────────────┐
                        │     Transcendence.Api (ASP.NET)     │
                        │  Controllers · SignalR Hubs · Auth  │
-                       └─────────────────┬───────────────────┘
-                                         │
-                                         ▼
-                       ┌─────────────────────────────────────┐
-                       │      Transcendence.Application      │
-                       │   Service contracts · use cases     │
-                       └─────────────────┬───────────────────┘
-                                         │
-                          ┌──────────────┴──────────────┐
-                          ▼                             ▼
-            ┌─────────────────────────┐   ┌──────────────────────────┐
-            │  Transcendence.Domain   │   │ Transcendence.Infra      │
-            │  Entities · core models │   │ EF Core · repos · files  │
-            └─────────────────────────┘   └──────────────┬───────────┘
-                                                         │
-                                                         ▼
-                                              ┌────────────────────┐
-                                              │   PostgreSQL 16    │
-                                              └────────────────────┘
+                       └─────┬─────────────────────┬─────────┘
+                             │                     │
+                             ▼                     ▼
+              ┌─────────────────────────┐   ┌──────────────────────────┐
+              │ Transcendence.Application│  │ Transcendence.Infrastructure │
+              │  Service contracts       │  │  EF Core · repositories  │
+              │  Use cases · DTOs        │◄─│  File storage · JWT gen  │
+              └────────────┬─────────────┘  └──────────────┬───────────┘
+                           │                                │
+                           ▼                                ▼
+              ┌─────────────────────────┐    ┌──────────────────────┐
+              │  Transcendence.Domain   │    │   PostgreSQL 16      │
+              │  Entities · core rules  │    │   + /app/uploads     │
+              └─────────────────────────┘    └──────────────────────┘
 ```
 
-**Why this layering?** It keeps the domain pure (no framework dependencies), pushes I/O concerns to the edges, and makes the API surface trivially testable. New features almost always slot in cleanly without cascading changes.
+**Why this layering?** It keeps the **Domain** pure, no framework, no database, no HTTP, so the business rules can be reasoned about on their own. **Application** sits on top, defining the use cases and the contracts that the outer layers must satisfy. **Infrastructure** implements those contracts against EF Core, the filesystem, and external services like Google Identity. **Api** is the thin edge that translates HTTP requests and SignalR messages into Application calls.
 
+The dependency arrows all point *inward*: Api and Infrastructure depend on Application, Application depends on Domain, and Domain depends on nothing. That's the rule that makes the rest of the design work, swapping Postgres for another database, or HTTP for a CLI, would only touch the outer layers.
+
+In practice this means new features tend to slot in along predictable seams: a new entity in Domain, a service interface in Application, an EF Core configuration and repository in Infrastructure, and a controller (or hub method) in Api. The shape is repetitive on purpose.
 ---
 
 ## Database schema
@@ -383,7 +394,7 @@ Notifications **denormalize actor metadata** (`ActorUsername`, `ActorAvatarUrl`)
 
 ## Individual contributions
 
-### Michaela — Frontend Developer
+### Michaelaela — Frontend Developer
 
 Sole owner of the frontend application end-to-end.
 
@@ -480,7 +491,7 @@ VITE_API_BASE_URL=/api
 ## Repository structure
 
 ```text
-.
+
 ├── backend/
 │   ├── Transcendence.Api/              # HTTP API, controllers, SignalR hubs
 │   ├── Transcendence.Application/      # Use cases, service contracts
