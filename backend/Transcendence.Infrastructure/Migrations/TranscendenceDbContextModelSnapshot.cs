@@ -91,6 +91,9 @@ namespace Transcendence.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsDelivered")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uuid");
 
