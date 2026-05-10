@@ -97,17 +97,16 @@ We selected **4 Major** and **7 Minor** modules for a total of **15 points**.
 | **M3** | **Users can interact with each other** | Chat (1:1 conversations), profile pages (own + others), and a complete friends system (request, accept/decline, remove, online status). |
 | **M4** | **Standard user management and authentication** | JWT-based auth, profile editing, avatar upload (with a default fallback), online status, friend management, and a public profile page per user. |
 
-### Minor modules (7 × 1 = 7.0 points)
+### Minor modules (6 × 1 = 6.0 points)
 
 | # | Module | How we satisfied it |
 |---|---|---|
 | **m1** | **Complete notification system** | Notifications generated for create/update/delete actions across friends, posts, comments, likes, and chat. Includes an unread counter and a mark-as-read endpoint. |
 | **m2** | **File upload and management** | Multi-type upload (images, documents), client-side **and** server-side validation (type, size, format), secure storage with access control, image previews, upload progress, and deletion. |
-| **m3** | **Multi-language support (≥ 3)** | i18next-powered i18n with **3 complete translations** (_[EN, DE, FR — adjust as needed]_), a UI language switcher, and 100% coverage of user-facing strings. |
+| **m3** | **Multi-language support (≥ 3)** | i18next-powered i18n with **3 complete translations** EN, ES, FR, a UI language switcher, and 100% coverage of user-facing strings. |
 | **m4** | **Remote authentication (OAuth 2.0)** | Google sign-in via OAuth 2.0, integrated with the JWT issuance flow so federated and local accounts share a single identity model. |
-| **m5** | **Two-Factor Authentication (2FA)** | _[**VERIFY**: confirm 2FA was actually implemented. If not, remove this row — your total becomes 7.0 points (4 Majors + 6 Minors).]_ |
-| **m6** | **Custom-made design system** | A reusable component library with a defined colour palette, typography scale, and icon set. **≥ 10 reusable components** (Button, Input, Modal, Card, Avatar, Toast, Tabs, Dropdown, Spinner, Badge, …) built on Tailwind tokens. |
-| **m7** | **Use an ORM** | **Entity Framework Core** with code-first migrations, applied automatically on API startup. |
+| **m5** | **Custom-made design system** | A reusable component library with a defined colour palette, typography scale, and icon set. **≥ 10 reusable components** (Button, Input, Modal, Card, Avatar, Toast, Tabs, Dropdown, Spinner, Badge, …) built on Tailwind tokens. |
+| **m6** | **Use an ORM** | **Entity Framework Core** with code-first migrations, applied automatically on API startup. |
 
 ---
 
@@ -342,7 +341,7 @@ erDiagram
     }
 ```
 
-# 🏛️ Architecture
+# Architecture
 
 Project Transcendence is a social platform whose database is organized around **five domains**: identity, social feed, friendships, chat, and notifications. All tables live in PostgreSQL under the `app` schema and are managed via EF Core migrations applied automatically at API startup.
 
@@ -397,7 +396,7 @@ Sole owner of the frontend application end-to-end.
 - **Real-time chat UI.** Conversation list, message thread, send/receive, reconnection handling, and presence integration with the SignalR client.
 - **Notifications UI.** Inbox, unread counter, mark-as-read, and surface integration across the app.
 - **File uploads.** Client-side validation (type/size/format), upload progress, image preview, and deletion flows for the **file upload and management** Minor module.
-- **Internationalisation.** Wired i18next, structured the translation namespaces, produced the _[EN / DE / FR]_ translation files, and built the language switcher — covering the **multi-language** Minor module.
+- **Internationalisation.** Wired i18next, structured the translation namespaces, produced the EN / ES / FR translation files, and built the language switcher — covering the **multi-language** Minor module.
 - **Mock-mode harness.** Set up MSW so the frontend could run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback.
 - **Tooling.** ESLint config, Tailwind tokens, TypeScript strict-mode setup, and the `frontend/.env` contract.
 
@@ -435,7 +434,7 @@ Sole owner of the frontend application end-to-end.
 | Docker + Docker Compose | latest stable |
 | Node.js | 18+ |
 | npm | 9+ |
-| .NET SDK | _[8.0 / 9.0]_ | ??
+| .NET SDK | 8.0 |
 
 For the Docker-based flow, Docker is the only hard requirement. The frontend can also be run separately with Vite during development.
 
@@ -483,25 +482,14 @@ VITE_API_BASE_URL=/api
 
 ```text
 .
-├── backend/
+├── **backend** /
 │   ├── Transcendence.Api/              # HTTP API, controllers, SignalR hubs
 │   ├── Transcendence.Application/      # Use cases, service contracts
 │   ├── Transcendence.Domain/           # Entities, core models, business rules
 │   ├── Transcendence.Infrastructure/   # EF Core, repositories, persistence, storage
 │   └── Transcendence.sln
-├── frontend/
-│   ├── public/                         # Static assets
-│   ├── src/                            # React app (api / auth / components / hooks /
-│   │                                   #            pages / realtime / i18n)
-│   ├── index.html
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   ├── vite.config.ts
-│   ├── eslint.config.js
-│   └── .env.example
-├── docker/
+├── **backups** /                            # DB dumps (git-ignored)
+├── **docker **/
 │   ├── nginx/
 │   │   ├── certs/                      # Local development TLS certificates
 │   │   ├── default.conf                # Reverse proxy + WebSocket upgrade rules
@@ -511,28 +499,63 @@ VITE_API_BASE_URL=/api
 │       ├── generate-certs.sh           # Issues local self-signed certs
 │       ├── backup-db.sh                # pg_dump wrapper
 │       └── restore-db.sh               # pg_restore wrapper
-├── docs/
+├── **docs** /
 │   ├── api/                            # Endpoint contracts, payload shapes
+│   │   ├── auth/
+│   │   ├── chats/
+│   │   ├── common/
+│   │   ├── feed/
+│   │   ├── notifications/
+│   │   ├── profile/
+│   │   ├── search/
+│   |   └── openapi.yaml
 │   ├── back end/                       # Backend design notes
+│   │   ├── chat/
+│   │   ├── OpenApi
 │   ├── db_schema/                      # ER diagrams, schema drafts
 │   ├── front/                          # Frontend design notes
 │   ├── minor/                          # Notes per minor module
+│   ├── DB entities -> api.md                        
 │   ├── DB Entities.md
-│   ├── DB entities -> api.md
-│   ├── User scenarios.md
+│   ├── en.subject_Transcendence.pdf    # 42 subject reference
 │   ├── SOCIAL MEDIA Features.jpg
-│   └── en.subject_Transcendence.pdf    # 42 subject reference
-├── backups/                            # DB dumps (git-ignored)
-├── uploads/                            # Locally uploaded files (git-ignored)
-├── API-First PLAN Backend–Frontend Collaboration (Draft).md
-├── MM_ApiGuidelines.md                 # API consumption guidelines (frontend-driven)
-├── Dependency map.pages                # Cross-module dependency map
-├── The-Social_Flow-Tecnical-Tools.pdf  # Technical tooling reference
-├── docker-compose.yml
-├── Makefile
+│   └── User scenarios.md
+├── **frontend** /
+│   ├── public/                         # Static assets
+│   ├── src/
+│   │   ├── api/
+│   │   ├── app/
+│   │   ├── auth/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── i18n/
+│   │   ├── mocks/
+│   │   ├── pages/
+│   │   ├── realtime/
+│   │   ├── types/
+│   │   ├── utils/
+│   │   ├── index.css
+│   |   └── main.tsx
+│   ├── .env.example
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── **uploads **/                       # Locally uploaded files (git-ignored)
+├── .dockerignore
 ├── .env.example
 ├── .gitignore
-└── README.md
+├── API-First PLAN Backend–Frontend Collaboration (Draft).md
+├── Dependency map.pages                # Cross-module dependency map
+├── docker-compose.yml
+├── Makefile
+├── README.md
+└── The-Social_Flow-Tecnical-Tools.pdf  # Technical tooling reference
 ```
 
 ---
@@ -616,7 +639,7 @@ docs/db_schema/
 
 | Area | Endpoints |
 |---|---|
-| `auth` | sign up, sign in, sign out, Google sign-in, _[2FA verify]_ |
+| `auth` | sign up, sign in, sign out, Google sign-in |
 | `profile` | own profile, others' profiles, profile update, password change, account deletion, search |
 | `posts` | feed, profile posts, post detail, comments, likes, create/delete |
 | `friends` | list, requests, accept/decline, remove |
