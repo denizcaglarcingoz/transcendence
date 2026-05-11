@@ -479,6 +479,7 @@ VITE_API_BASE_URL=/api
 From the repository root:
 
 ```bash
+make
 make up
 ```
 
@@ -528,7 +529,6 @@ Helper commands:
 
 ```bash
 make backup-db
-make restore-db
 make db-up
 ```
 
