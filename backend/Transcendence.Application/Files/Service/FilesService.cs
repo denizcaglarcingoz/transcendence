@@ -34,6 +34,11 @@ public sealed class FilesService : IFilesService
 	// POST /files
 	public async Task<UploadFilesResultDto> UploadFilesAsync(Guid userId, IFormFile file, CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(userId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		const long maxBytes = 10 * 1024 * 1024; // 10 MB
 		if (file.Length > maxBytes) throw new ArgumentException("File is too large (max 10 MB).", nameof(file));
 
@@ -115,6 +120,11 @@ public sealed class FilesService : IFilesService
 	// GET /files/{fileId}
 	public async Task<FileGetResult> GetFileAsync(Guid requesterId, Guid fileId, CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(requesterId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		// 1) Load file metadata
 		var asset = await _fileRepository.GetByIdAsync(fileId, ct)
 			?? throw new NotFoundException("File not found.");
@@ -122,8 +132,6 @@ public sealed class FilesService : IFilesService
 		// 2) Access rules:
 		//    - Avatar: anyone can view
 		//    - Post image: only author or friends of author can view
-
-		// Is this file used as an AVATAR????
 		Guid? avatarOwnerId = await _userRepository.GetUserIdByAvatarFileIdAsync(fileId, ct);
 
 		if (avatarOwnerId is null)
@@ -169,6 +177,11 @@ public sealed class FilesService : IFilesService
 	// DELETE /files/{fileId}
 	public async Task DeleteFileAsync(Guid requesterId, Guid fileId, CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(requesterId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		var asset = await _fileRepository.GetByIdAsync(fileId, ct)
 			?? throw new NotFoundException("File not found.");
 

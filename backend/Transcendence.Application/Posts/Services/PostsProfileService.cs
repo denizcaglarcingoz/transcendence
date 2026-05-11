@@ -40,9 +40,14 @@ public class PostsProfileService : IPostsProfileService
 		Guid currentUserId,
 		CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		take = (take < 1 || take > 50) ? 20 : take;
 		var targetUser = await _userRepository.GetByIdAsync(targetUserId, ct);
-		if (targetUser == null) { throw new NotFoundException("User not found."); }
+		if (targetUser == null || targetUser.IsDeleted) { throw new UnauthorizedException("Invalid session."); }
 
 		if (targetUserId != currentUserId)
 		{
@@ -77,6 +82,12 @@ public class PostsProfileService : IPostsProfileService
 		Guid currentUserId,
 		CancellationToken ct)
 	{
+
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+		
 		take = (take < 1 || take > 50) ? 20 : take;
 		var post = await _postRepository.GetPostAsync(postId, ct)
 			?? throw new NotFoundException("Post not found.");
@@ -100,6 +111,11 @@ public class PostsProfileService : IPostsProfileService
 		Guid currentUserId,
 		CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		take = (take < 1 || take > 50) ? 20 : take;
 		var post = await _postRepository.GetPostAsync(postId, ct)
 			?? throw new NotFoundException("Post not found.");

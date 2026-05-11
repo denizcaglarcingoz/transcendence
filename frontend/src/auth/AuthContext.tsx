@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react'
 import type { SignInRequestDto, SignUpRequestDto, GoogleSignInRequestDto } from '../types/api'
 import { signInApi, signUpApi, googleSignInApi } from '../api/auth.api'
 import { useQueryClient } from '@tanstack/react-query'
@@ -49,25 +49,41 @@ const decodeBase64Url = (base64Url: string): string => {
   return atob(base64)
 }
 
-/** Check if JWT token has expired by examining the exp claim */
-export const isJwtExpired = (token: string): boolean => {
+function getJwtExpiryMs(token: string): number | null {
   try {
     const parts = token.split('.')
 
+    // JWT must have: header.payload.signature
     if (parts.length !== 3) {
-      return true
+      return null
     }
 
+    // Decode payload and read expiry
     const payload = JSON.parse(decodeBase64Url(parts[1]))
 
+    // No exp means invalid token
     if (!payload.exp) {
-      return true
+      return null
     }
 
-    return Date.now() >= payload.exp * 1000
+    // exp is seconds, Date.now() is milliseconds
+    return payload.exp * 1000
   } catch {
+    // Broken token, unreadable token, invalid JSON
+    return null
+  }
+}
+
+export const isJwtExpired = (token: string): boolean => {
+  const expiryMs = getJwtExpiryMs(token)
+
+  // Invalid token counts as expired
+  if (!expiryMs) {
     return true
   }
+
+  // Expired if current time passed expiry time
+  return Date.now() >= expiryMs
 }
 
 /** Load token from localStorage and validate it (remove if expired) */
@@ -159,6 +175,44 @@ const googleSignIn = useCallback(async (req: GoogleSignInRequestDto) => {
     setAuth(null, null)
     queryClient.clear()
   }, [setAuth, queryClient])
+
+  // Checking the state of token to force logout in cases like null, old, or bad
+  // Watch the current token and automatically logout if it is invalid or expired
+  useEffect(() => {
+  if (!state.token) {
+    queryClient.clear()
+    return
+  }
+
+  const expiryMs = getJwtExpiryMs(state.token)
+
+  if (!expiryMs || Date.now() >= expiryMs) {
+    logout()
+    return
+  }
+
+  const timeoutId = window.setTimeout(() => {
+    logout()
+  }, expiryMs - Date.now())
+
+  return () => window.clearTimeout(timeoutId)
+}, [state.token, logout, queryClient])
+
+
+  useEffect(() => {
+    // Listen for global 401 Unauthorized responses from Axios
+    const handleUnauthorized = () => {
+      logout()
+    }
+  
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+  
+    // Remove listener when AuthProvider unmounts
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized)
+    }
+  }, [logout])
+
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const value = useMemo<AuthContextValue>(() => ({

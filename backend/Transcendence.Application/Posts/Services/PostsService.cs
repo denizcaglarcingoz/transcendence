@@ -41,6 +41,11 @@ public class PostsService : IPostsService
 	// GET /posts/{postId}
 	public async Task<PostDto> GetPostAsync(Guid postId, Guid currentUserId, CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		var post = await _postRepository.GetPostAsync(postId, ct)
 			?? throw new NotFoundException("Post not found.");
 
@@ -91,6 +96,11 @@ public class PostsService : IPostsService
 	// POST
 	public async Task<PostDto> CreatePostAsync(Guid currentUserId, CreatePostDto dto, CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		if (dto.ImageFileId == Guid.Empty)
 			throw new ArgumentException("ImageFileId is required.", nameof(dto.ImageFileId));
 
@@ -118,6 +128,11 @@ public class PostsService : IPostsService
 	// DELETE /posts/{postId}
 	public async Task DeletePostAsync(Guid postId, Guid currentUserId, CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		var post = await _postRepository.GetPostAsync(postId, ct)
 			?? throw new NotFoundException("Post not found.");
 
@@ -143,6 +158,11 @@ public class PostsService : IPostsService
 	// POST /posts/{postId}/like
 	public async Task LikePostAsync(Guid postId, Guid currentUserId, CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		var post = await _postRepository.GetPostAsync(postId, ct)
 			?? throw new NotFoundException("Post not found.");
 		if (post.AuthorId != currentUserId)
