@@ -47,6 +47,9 @@ public sealed class FriendsQuery : IFriendsQuery
 			join user in _db.Users.AsNoTracking()
 				on friendId equals user.Id
 
+			// Do not show deleted users in the friends list.
+			where !user.IsDeleted
+			
 			// Apply cursor pagination.
 			// First page: cursorId is null, so this filter does nothing.
 			// Next pages: return only users with an Id after the cursor.
@@ -91,21 +94,26 @@ public sealed class FriendsQuery : IFriendsQuery
 		return new CursorPageDto<FriendDto>(items, nextCursor);
 	}
 
-	public async Task<IReadOnlyList<FriendshipRequestDto>> ListFriendshipRequestsAsync(Guid userId, CancellationToken ct)
-    {
-        // Requests *to* me: I’m TargetUserId and somebody else requested me.
-        var requests = await _db.FriendshipRequests
-            .Where(r => r.TargetUserId == userId)
-            .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new FriendshipRequestDto
-            {
-                Id = r.Id,
-                RequesterId = r.RequesterId,
-                TargetUserId = r.TargetUserId,
-                CreatedAt = r.CreatedAt
-            })
-            .ToListAsync(ct);
-
-        return requests;
-    }
+	public async Task<IReadOnlyList<FriendshipRequestDto>> ListFriendshipRequestsAsync(
+    Guid userId,
+    CancellationToken ct)
+	{
+	    var requests = await (
+	        from request in _db.FriendshipRequests.AsNoTracking()
+	        join requester in _db.Users.AsNoTracking()
+	            on request.RequesterId equals requester.Id
+	        where request.TargetUserId == userId
+	        where !requester.IsDeleted
+	        orderby request.CreatedAt descending
+	        select new FriendshipRequestDto
+	        {
+	            Id = request.Id,
+	            RequesterId = request.RequesterId,
+	            TargetUserId = request.TargetUserId,
+	            CreatedAt = request.CreatedAt
+	        }
+	    ).ToListAsync(ct);
+	
+	    return requests;
+	}
 }

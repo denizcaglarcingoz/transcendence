@@ -98,6 +98,7 @@ public sealed class PostsProfileRepository : IPostsProfileRepository
 			from l in _db.Likes
 			join u in _db.Users on l.AuthorId equals u.Id
 			where l.PostId == postId
+			where !u.IsDeleted
 			orderby l.CreatedAtUtc descending, l.Id descending
 			select new LikesPreviewDto
 			{
