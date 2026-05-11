@@ -249,8 +249,6 @@ In practice this means new features tend to slot in along predictable seams: a n
 
 ![Database schema ERD](docs/db_schema/DB_schema.jpg)
 
-> A more detailed ER diagram lives at `docs/db_schema/DB_schema.jpg`.
-
 ---
 
 ### Schema Architecture
