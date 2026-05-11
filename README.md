@@ -247,9 +247,9 @@ In practice this means new features tend to slot in along predictable seams: a n
 
 ## Database schema
 
-![alt text](image-1.png)
+![Database schema ERD](docs/db_schema/DB_schema.jpg)
 
-> A more detailed ER diagram lives at `docs/db_schema/schema.png` _(generate later with dbdiagram.io / drawSQL and commit the export)_.
+> A more detailed ER diagram lives at `docs/db_schema/DB_schema.jpg`.
 
 ---
 
@@ -424,8 +424,10 @@ VITE_API_BASE_URL=/api
 │   |   └── openapi.yaml
 │   ├── back end/                       # Backend design notes
 │   │   ├── chat/
-│   │   ├── OpenApi
+│   |   └──  OpenApi
 │   ├── db_schema/                      # ER diagrams, schema drafts
+│   │   ├── DB_schema.jpg
+│   |   └── schema.dbml
 │   ├── front/                          # Frontend design notes
 │   ├── minor/                          # Notes per minor module
 │   ├── DB entities -> api.md                        
