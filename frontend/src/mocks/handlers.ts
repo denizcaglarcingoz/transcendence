@@ -173,7 +173,7 @@ http.get('/api/posts/feed', ({ request }) => {
   const items = mockFeedPosts.slice(startIndex, startIndex + take)
   const nextCursor =
     startIndex + take < mockFeedPosts.length
-      ? items[items.length - 1]?.Id ?? null
+      ? items[items.length - 1]?.id ?? null
       : null
 
   return HttpResponse.json({
@@ -390,7 +390,7 @@ http.delete('/api/friends/:friendUserId', ({ params, request }) => {
   const items = filteredComments.slice(startIndex, startIndex + take)
   const nextCursor =
     startIndex + take < filteredComments.length
-      ? items[items.length - 1]?.Id ?? null
+      ? items[items.length - 1]?.id ?? null
       : null
 
   return HttpResponse.json({

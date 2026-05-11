@@ -3,7 +3,7 @@ import { ProfilePostPreviewDto } from "../types/api"
 export type User = {
   id: string
   username: string
-  rmail: string
+  email: string
   fullName: string
   bio: string | null
   avatarUrl?: string | null
