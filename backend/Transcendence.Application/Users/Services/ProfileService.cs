@@ -131,13 +131,14 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	//GET /profile/{id}
 	public async Task<OtherProfileDto> GetOtherProfileAsync(Guid targetUserId, Guid viewerUserId, CancellationToken ct)
 	{
-		var user = await _userRepository.GetByIdAsync(targetUserId, ct)
-			?? throw new NotFoundException("User not found.");
-
 		var viewerUser = await _userRepository.GetByIdAsync(viewerUserId, ct);
 
 		if (viewerUser is null || viewerUser.IsDeleted)
 			throw new UnauthorizedException("Invalid session.");
+			
+		var user = await _userRepository.GetByIdAsync(targetUserId, ct)
+			?? throw new NotFoundException("User not found.");
+
 
 		string friendShipStatus = await _friendsRepository.GetFriendshipStatusAsync(viewerUserId, targetUserId, ct);
 

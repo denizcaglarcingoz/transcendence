@@ -84,6 +84,11 @@ public sealed class FriendsService : IFriendsService
     // POST friends/requests/{targetUserId}/accept
     public async Task AcceptFriendshipRequestAsync(Guid targetUserId, Guid currentUserId, CancellationToken ct)
     {
+        var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
         var request = await _friendshipRequestRepository.GetAsync(targetUserId, currentUserId, ct)
             ?? throw new NotFoundException("Friend request not found.");
 
@@ -95,11 +100,6 @@ public sealed class FriendsService : IFriendsService
             await _friendshipRequestRepository.RemoveAsync(request.Id, ct);
             return;
         }
-
-        var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
-		
-		if (currentUser is null || currentUser.IsDeleted)
-    		throw new UnauthorizedException("Invalid session.");
 
         var friendship = new Friendship(request.RequesterId, request.TargetUserId, DateTime.UtcNow);
 
