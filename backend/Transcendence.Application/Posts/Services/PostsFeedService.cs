@@ -34,6 +34,11 @@ internal class PostsFeedService : IPostsFeedService
 		Guid currentUserId,
 		CancellationToken ct)
 	{
+		var currentUser = await _userRepository.GetByIdAsync(currentUserId, ct);
+		
+		if (currentUser is null || currentUser.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		take = (take < 1 || take > 50) ? 20 : take;
 
 		// repository returns: Items + NextCursor (cursor logic stays in repository)
