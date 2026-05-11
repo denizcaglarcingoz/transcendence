@@ -38,8 +38,10 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	//GET /profile/me
 	public async Task<MyProfileDto> GetMyProfileAsync(Guid userId, CancellationToken ct)
 	{
-		var user = await _userRepository.GetByIdAsync(userId, ct)
-			?? throw new NotFoundException("User not found.");
+		var user = await _userRepository.GetByIdAsync(userId, ct);
+
+		if (user is null || user.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
 
 		var postsCount = await _postRepository.CountByUserIdAsync(userId, ct);
 		var friendsCount = await _friendsRepository.CountFriendsAsync(userId, ct);
@@ -59,8 +61,10 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	//PATCH /profile/me
 	public async Task<MyProfileDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto, CancellationToken ct)
 	{
-		var user = await _userRepository.GetByIdAsync(userId, ct)
-			?? throw new NotFoundException("User not found.");
+		var user = await _userRepository.GetByIdAsync(userId, ct);
+		
+		if (user is null || user.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
 		//First we need to check if the username is changing and if the new username is already taken.
 		if (!string.IsNullOrWhiteSpace(dto.Username))
 		{
@@ -94,10 +98,7 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 			user.UpdateBio(newBio);
 		}
 
-		// 3. Update AvatarFileId (Same logic as Bio) //This works, but design-wise it is a bit awkward:your domain stores AvatarFileId, but DTO sends AvatarUrl.
-		//												That means service has to parse URL text just to get the actual ID.
-		//												A cleaner backend contract would often be:
-		//												frontend sends avatarFileId.backend builds URL in response.instead of sending URL back into backend.
+		// 3. Update AvatarFileId (Same logic as Bio) /
 		if (dto.AvatarUrl != null)
 		{
 			Guid? newAvatarFileId = null;
@@ -130,8 +131,14 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	//GET /profile/{id}
 	public async Task<OtherProfileDto> GetOtherProfileAsync(Guid targetUserId, Guid viewerUserId, CancellationToken ct)
 	{
+		var viewerUser = await _userRepository.GetByIdAsync(viewerUserId, ct);
+
+		if (viewerUser is null || viewerUser.IsDeleted)
+			throw new UnauthorizedException("Invalid session.");
+			
 		var user = await _userRepository.GetByIdAsync(targetUserId, ct)
 			?? throw new NotFoundException("User not found.");
+
 
 		string friendShipStatus = await _friendsRepository.GetFriendshipStatusAsync(viewerUserId, targetUserId, ct);
 
@@ -151,8 +158,10 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	//PATCH /profile/password
 	public async Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto, CancellationToken ct)
 	{
-		var user = await _userRepository.GetByIdAsync(userId, ct)
-			?? throw new NotFoundException("User not found.");
+		var user = await _userRepository.GetByIdAsync(userId, ct);
+		
+		if (user is null || user.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
 		
 		if (string.IsNullOrWhiteSpace(user.PasswordHash))
 			throw new ConflictException("This account does not support password change.");//created with Google
@@ -174,9 +183,20 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	//DELETE /profile/me
 	public async Task DeleteMeAsync(Guid userId, CancellationToken ct)
 	{
-		var user = await _userRepository.GetByIdAsync(userId, ct)
-			?? throw new NotFoundException("User not found.");
+		var user = await _userRepository.GetByIdAsync(userId, ct);
 
+		if (user is null)
+    		throw new UnauthorizedException("Invalid session.");
+
+		if(user.IsDeleted)
+			return;
+
+		var anonId = Guid.NewGuid().ToString("N");
+		user.UpdateDetails("Deleted User", $"deleted_{anonId}");
+		user.UpdateEmail($"deleted_{anonId}@deleted.invalid");
+		user.SetGoogleId($"deleted_{anonId}");
+		user.UpdateAvatar(null);
+		user.UpdateBio(null);
 		user.Delete();
 		await _userRepository.SaveChangesAsync(ct);
 	}
@@ -190,6 +210,11 @@ public sealed class ProfileService : IProfileService // collects meaning, reposi
 	string? cursor,
 	CancellationToken ct)
 	{
+		var user = await _userRepository.GetByIdAsync(currentUserId, ct);
+
+		if (user is null || user.IsDeleted)
+    		throw new UnauthorizedException("Invalid session.");
+
 		query = query.Trim();
 
 		if (string.IsNullOrWhiteSpace(query))

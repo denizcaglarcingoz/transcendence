@@ -62,6 +62,8 @@ namespace Transcendence.Infrastructure.Migrations
 
                     b.HasKey("ConversationId", "UserId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("ConversationParticipants", "app");
                 });
 
@@ -240,6 +242,14 @@ namespace Transcendence.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("RelatedConversationId");
+
+                    b.HasIndex("RelatedRequestId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("Notifications", "app");
                 });
 
@@ -407,6 +417,12 @@ namespace Transcendence.Infrastructure.Migrations
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Transcendence.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Transcendence.Domain.Chat.Message", b =>
@@ -415,6 +431,12 @@ namespace Transcendence.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Transcendence.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -453,6 +475,30 @@ namespace Transcendence.Infrastructure.Migrations
                     b.HasOne("Transcendence.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Transcendence.Domain.Notifications.Notification", b =>
+                {
+                    b.HasOne("Transcendence.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Transcendence.Domain.Chat.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("RelatedConversationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Transcendence.Domain.Friends.FriendshipRequest", null)
+                        .WithMany()
+                        .HasForeignKey("RelatedRequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Transcendence.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
