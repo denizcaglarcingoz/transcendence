@@ -224,7 +224,7 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
                        └─────┬─────────────────────┬─────────┘
                              │                     │
                              ▼                     ▼
-              ┌─────────────────────────┐     ┌──────────────────────────────┐
+              ┌──────────────────────────┐    ┌──────────────────────────────┐
               │ Transcendence.Application│    │ Transcendence.Infrastructure │
               │  Service contracts       │    │  EF Core · repositories      │
               │  Use cases · DTOs        │◄─--│  File storage · JWT gen      │
