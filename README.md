@@ -50,7 +50,7 @@ Transcendence is a private social application that brings together authenticatio
 |---|---|---|---|
 | **Deniz** | **Product Owner (PO) & Project Manager (PM)** | [@denniscingoz](https://github.com/denniscingoz) | Vision, scope, acceptance criteria, design, planning, coordination, delivery |
 | **Daria** | **Tech Lead** | [@grignetta](https://github.com/grignetta) | Architecture, code review, technical direction, database |
-| **Valerii** | **Backend Developer** | [@Vbezhevets](https://github.com/Vbezhevets) | Realtime features with SignalR |
+| **Valeriy** | **Backend Developer** | [@Vbezhevets](https://github.com/Vbezhevets) | Realtime features with SignalR |
 | **Michaelaela** | **Frontend Developer** | [@Michaelaela811](https://github.com/Michaelaela811) | Frontend application |
 
 > _Roles were assigned at kickoff and remained stable through the project. All members contributed to code, and everyone tested the system and fixed bugs across the codebase; the role headings indicate primary responsibility, not exclusive ownership._
@@ -109,7 +109,7 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | **m3** | **Multi-language support (≥ 3)** | i18next-powered i18n with three complete translations (EN, ES, FR), a UI language switcher, and full coverage of user-facing strings. |
 | **m4** | **Remote authentication (OAuth 2.0)** | Google sign-in via OAuth 2.0, integrated with the JWT issuance flow so federated and local accounts share a single identity model. |
 | **m5** | **Custom-made design system** | A reusable UI layer built on Tailwind tokens: layout components (`Layout`, `Header`, `BottomNav`), generic widgets (`Modal`, `Field`, `LanguageDropdown`, `UploadProgressOverlay`, `ProtectedPostThumb`), and domain modals (`PostDetailModal`, `LikesModal`, `NotificationsModal`, `SearchModal`, `SettingsModal`) — plus a shared CSS utility layer in `index.css` (`.btn-*`, `.input`, `.card`, `.panel`, `.divider`, `.message-*`). |
-| **m6** | **Use an ORM** | **Entity Framework Core** with code-first migrations, applied automatically on API startup. |
+| **m6** | **Use an ORM** | **Entity Framework Core** with code-first migrations. |
 | **m7** | **Support for additional browsers** | The app is tested and verified to work in **Chrome, Firefox, Safari** with consistent UI/UX. All features (chat, real-time presence, file upload, OAuth popup, i18n) function identically across browsers. Any browser-specific limitations are documented in `docs/browser-support.md`. |
 
 
@@ -157,7 +157,7 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | **Design system** | Reusable UI components (Modal, BottomNav, Field, LanguageDropdown, UploadProgressOverlay, ProtectedPostThumb, …) | Michaela | — | ✅ |
 | | Shared CSS utilities (`.btn-*`, `.input`, `.card`, `.panel`, `.divider`, `.message-*`) | Michaela | — | ✅ |
 | **Infra** | Docker Compose (db + api + nginx) | — | Daria | ✅ |
-| | Nginx reverse proxy + WebSocket upgrade | — | Daria | ✅ |
+| | Nginx reverse proxy + WebSocket upgrade | — | Daria, Valeriy | ✅ |
 | | Local TLS certs (self-signed) | — | Daria | ✅ |
 | | DB backup / restore scripts | — | Daria | ✅ |
 | | EF Core migrations applied on startup | — | Daria | ✅ |
@@ -171,8 +171,8 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | Choice | Why |
 |---|---|
 | **ASP.NET Core Web API** | Mature, cross-platform, opinionated. Strong typing end-to-end and excellent OpenAPI tooling support. |
-| **C# / .NET 8** | Performance, a rich BCL, and first-class async — ideal for WebSocket-heavy workloads. |
-| **Entity Framework Core (Npgsql)** | Code-first migrations, LINQ queries, and a strict mapping layer between domain models and persistence — directly satisfies the **ORM minor module**. |
+| **C# / .NET 8** | Performance, a rich Base Class Library - ideal for WebSocket-heavy workloads. |
+| **Entity Framework Core (Npgsql)** | Code-first migrations, and a strict mapping layer between domain models and persistence — directly satisfies the **ORM minor module**. |
 | **SignalR** | Battle-tested abstraction over WebSockets with built-in transport fallback, group/user targeting, and reconnection — drastically reduces the surface area of the **real-time major module**. |
 | **JWT bearer auth** | Stateless, plays well with SPAs, and integrates cleanly with both local and Google OAuth identity flows. |
 | **Google.Apis.Auth** | Server-side verification of Google ID tokens before issuing our own JWT. |
@@ -224,17 +224,17 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
                        └─────┬─────────────────────┬─────────┘
                              │                     │
                              ▼                     ▼
-              ┌─────────────────────────┐   ┌──────────────────────────┐
-              │ Transcendence.Application│  │ Transcendence.Infrastructure │
-              │  Service contracts       │  │  EF Core · repositories  │
-              │  Use cases · DTOs        │◄─│  File storage · JWT gen  │
-              └────────────┬─────────────┘  └──────────────┬───────────┘
-                           │                                │
-                           ▼                                ▼
-              ┌─────────────────────────┐    ┌──────────────────────┐
-              │  Transcendence.Domain   │    │   PostgreSQL 16      │
-              │  Entities · core rules  │    │   + /app/uploads     │
-              └─────────────────────────┘    └──────────────────────┘
+              ┌────────────────────────────┐   ┌──────────────────────────────┐
+              │ Transcendence.Application. │   │ Transcendence.Infrastructure │
+              │  Service contracts         │   │  EF Core · repositories      │
+              │  Use cases · DTOs          │ ◄─│  File storage · JWT gen      │
+              └────────────┬───────────────┘   └──────────────┬───────────────┘
+                           │                                  │
+                           ▼                                  ▼
+              ┌─────────────────────────┐        ┌──────────────────────────┐
+              │  Transcendence.Domain   │        │   PostgreSQL 16          │
+              │  Entities · core rules  │        │   + /app/uploads         │
+              └─────────────────────────┘        └──────────────────────────┘
 ```
 
 **Why this layering?** It keeps the **Domain** pure, no framework, no database, no HTTP, so the business rules can be reasoned about on their own. **Application** sits on top, defining the use cases and the contracts that the outer layers must satisfy. **Infrastructure** implements those contracts against EF Core, the filesystem, and external services like Google Identity. **Api** is the thin edge that translates HTTP requests and SignalR messages into Application calls.
@@ -247,175 +247,15 @@ In practice this means new features tend to slot in along predictable seams: a n
 
 ## Database schema
 
-```mermaid
-erDiagram
-    USERS ||--o| FILES : "avatar"
-    USERS ||--o{ POSTS : "authors"
-    USERS ||--o{ FILES : "owns"
-    USERS ||--o{ COMMENTS : "writes"
-    USERS ||--o{ LIKES : "gives"
-    USERS ||--o{ FRIENDSHIPS : "User1"
-    USERS ||--o{ FRIENDSHIPS : "User2"
-    USERS ||--o{ FRIENDSHIP_REQUESTS : "requester"
-    USERS ||--o{ FRIENDSHIP_REQUESTS : "target"
-
-    POSTS ||--o{ COMMENTS : "has"
-    POSTS ||--o{ LIKES : "has"
-    POSTS }o--|| FILES : "image"
-
-    CONVERSATIONS ||--o{ CONVERSATION_PARTICIPANTS : "has"
-    CONVERSATIONS ||--o{ MESSAGES : "contains"
-
-    USERS ||--o{ NOTIFICATIONS : "receives"
-
-    USERS {
-        uuid Id PK
-        string Username UK
-        string Email UK
-        string FullName
-        string PasswordHash "nullable"
-        string GoogleId "nullable, UK"
-        uuid AvatarFileId FK "nullable"
-        bool IsDeleted
-        timestamptz CreatedAt
-    }
-
-    FILES {
-        uuid Id PK
-        uuid OwnerId FK
-        string StoragePath UK
-        string ContentType
-        bigint SizeBytes
-    }
-
-    POSTS {
-        uuid Id PK
-        uuid AuthorId FK
-        uuid ImageFileId FK
-        string Content "nullable, max 1000"
-        timestamptz CreatedAtUtc
-    }
-
-    COMMENTS {
-        uuid Id PK
-        uuid PostId FK
-        uuid AuthorId FK
-        string Content "max 1000"
-        timestamptz CreatedAtUtc
-    }
-
-    LIKES {
-        uuid Id PK
-        uuid PostId FK
-        uuid AuthorId FK
-        timestamptz CreatedAtUtc
-    }
-
-    FRIENDSHIPS {
-        uuid User1Id PK,FK
-        uuid User2Id PK,FK
-        timestamptz CreatedAt
-    }
-
-    FRIENDSHIP_REQUESTS {
-        uuid Id PK
-        uuid RequesterId FK
-        uuid TargetUserId FK
-        uuid User1Id "normalized"
-        uuid User2Id "normalized"
-    }
-
-    CONVERSATIONS {
-        uuid Id PK
-        int Type "1=Direct, 2=Group"
-        string LastMessageText "nullable"
-        timestamptz LastMessageAt "nullable"
-    }
-
-    CONVERSATION_PARTICIPANTS {
-        uuid ConversationId PK,FK
-        uuid UserId PK
-        timestamptz LastReadAt
-    }
-
-    MESSAGES {
-        uuid Id PK
-        uuid ConversationId FK
-        uuid SenderId
-        uuid ClientMessageId "idempotency"
-        string Content "max 4000"
-        bool IsDeleted
-        timestamptz CreatedAt
-    }
-
-    NOTIFICATIONS {
-        uuid Id PK
-        uuid UserId
-        int Type
-        string Text
-        bool IsRead
-        timestamptz CreatedAt
-    }
-```
-   users ──┬──< posts ──┬──< comments
-           │            └──< likes
-           ├──< notifications
-           ├──< files
-           ├──< friendships >──── users
-           └──< conversation_participants >── conversations ──< messages
-```
+![alt text](image.png)
 
 > A more detailed ER diagram lives at `docs/db_schema/schema.png` _(generate later with dbdiagram.io / drawSQL and commit the export)_.
 
 ---
 
-
-## Individual contributions
-
-### Michaela — Frontend Developer
-
-Sole owner of the frontend application end-to-end.
-
-- **Application shell & routing.** Set up the Vite + React + TypeScript project, the routing tree, the `RequireAuth` protected-route wrapper, and the `RealtimeProvider` that mounts the SignalR client at the right point in the lifecycle.
-- **API integration layer.** Built every typed API client under `src/api/`, the Axios instance with token attachment and centralised error handling, and the TanStack Query hooks that consume them.
-- **Authentication flows.** Email/password sign-in, Google OAuth 2.0 sign-in, sign-out, JWT handling, and session restoration on reload.
-- **Custom design system.** Built the reusable component library (Button, Input, Modal, Card, Avatar, Toast, Tabs, Dropdown, Spinner, Badge, …) on top of Tailwind tokens — directly satisfying the **custom design system** Minor module.
-- **Feature pages.** Feed, post creation, post detail, comments, likes, profile (own + others), edit profile, settings, friends, friend requests, and online status indicators.
-- **Real-time chat UI.** Conversation list, message thread, send/receive, reconnection handling, and presence integration with the SignalR client.
-- **Notifications UI.** Inbox, unread counter, mark-as-read, and surface integration across the app.
-- **File uploads.** Client-side validation (type/size/format), upload progress, image preview, and deletion flows for the **file upload and management** Minor module.
-- **Internationalisation.** Wired i18next, structured the translation namespaces, produced the _[EN / DE / FR]_ translation files, and built the language switcher — covering the **multi-language** Minor module.
-- **Mock-mode harness.** Set up MSW so the frontend could run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback.
-- **Tooling.** ESLint config, Tailwind tokens, TypeScript strict-mode setup, and the `frontend/.env` contract.
-
-### Deniz — Product Owner | Project Manager
-
-- **Major contributions:**
-  - _[e.g. "Designed the friends-graph data model and authored migrations `2025_01_03_AddFriendships` … `2025_01_22_AddFriendBlockList`."]_
-  - _[e.g. "Implemented the SignalR chat hub including reconnection logic and typing indicators."]_
-- **Key PRs:** `#12`, `#34`, `#56`
-- **Cross-cutting work:** Code review, scope arbitration, demo prep.
-
-### Daria — Tech Lead
-
-- **Major contributions:**
-  - _[e.g. "Established the layered architecture (Api / Application / Domain / Infrastructure) and wrote the initial EF Core configuration."]_
-  - _[e.g. "Implemented JWT issuance and the Google OAuth integration."]_
-- **Key PRs:** `#3`, `#5`, `#28`
-- **Cross-cutting work:** Architecture decisions, performance review, code-review backbone.
-
-### Valerii — Backend Developer
-
-- **Major contributions:**
-  - _[e.g. "Built the full file upload and management module: client validation, multipart endpoints, secure storage, and the deletion flow."]_
-  - _[e.g. "Implemented the notifications pipeline end-to-end."]_
-- **Key PRs:** `#22`, `#33`, `#48`
-
----
-
 # Architecture
 
-Project Transcendence is a social platform whose database is organized around **five domains**: identity, social feed, friendships, chat, and notifications. All tables live in PostgreSQL under the `app` schema and are managed via EF Core migrations applied automatically at API startup.
+Project Transcendence is a social platform whose database is organized around **five domains**: identity, social feed, friendships, chat, and notifications. All tables live in PostgreSQL under the `app` schema and are managed via EF Core migrations.
 
 ## Identity
 
@@ -454,9 +294,9 @@ Notifications **denormalize actor metadata** (`ActorUsername`, `ActorAvatarUrl`)
 
 ---
 
-## Individual contributions
+### Individual contributions
 
-### Michaela — Frontend Developer
+## Michaela — Frontend Developer
 
 - **Application shell & routing.** Set up the Vite + React + TypeScript project, the routing tree, the `RequireAuth` protected-route wrapper, and the `RealtimeProvider` that mounts the SignalR client at the right point in the lifecycle.
 - **Custom design system.** Built the reusable UI layer on Tailwind tokens — layout components (`Layout`, `Header`, `BottomNav`), generic widgets (`Modal`, `Field`, `LanguageDropdown`, `UploadProgressOverlay`, `ProtectedPostThumb`), and domain modals (`PostDetailModal`, `LikesModal`, `NotificationsModal`, `SearchModal`, `SettingsModal`) — together with a shared CSS utility layer in `index.css` (`.btn-*`, `.input`, `.card`, `.panel`, `.divider`, `.message-*`). Satisfies the **custom design system** Minor module.
@@ -467,7 +307,7 @@ Notifications **denormalize actor metadata** (`ActorUsername`, `ActorAvatarUrl`)
 - **Mock-mode harness.** Set up MSW so the frontend could run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback.
 - **Tooling.** ESLint config, Tailwind setup, TypeScript strict-mode, and the `frontend/.env` contract.
 
-### Deniz — Product Owner & Backend Developer
+## Deniz — Product Owner & Backend Developer
 
 - **Application layer.** Implemented the services that drive the user-facing features: `AuthService`, `ProfileService`, `PostsService`, `PostsFeedService`, `PostsProfileService`, `FriendsService`, and `FilesService`.
 - **Domain rules and invariants.** Encoded the rules that keep the data consistent — no self-friendships, no duplicate friend requests, friends-only file access, idempotent like/unlike, and the soft-delete semantics for posts and comments.
@@ -479,7 +319,7 @@ Notifications **denormalize actor metadata** (`ActorUsername`, `ActorAvatarUrl`)
 - **API integration layer.** Built the typed API clients under `src/api/`, the Axios instance with token attachment and 401 handling, and the TanStack Query hooks that consume them across the app.
 - **Authentication flows.** Email/password sign-in, Google OAuth 2.0 sign-in, sign-out, JWT handling, and session restoration on reload.
 
-### Daria — Tech Lead & Backend Foundation
+## Daria — Tech Lead & Backend Foundation
 
 - **Architecture.** Established the four-project layout (`Transcendence.Api` / `Application` / `Domain` / `Infrastructure`) and the dependency-direction rules between them.
 - **Database & ORM.** Designed the schema, wrote the initial `TranscendenceDbContext`, the per-entity EF Core configurations, and every migration in `Transcendence.Infrastructure/Migrations`.
@@ -488,7 +328,7 @@ Notifications **denormalize actor metadata** (`ActorUsername`, `ActorAvatarUrl`)
 - **CI.** Backend build pipeline (`dotnet build` on Ubuntu) so every PR is verified before merge.
 - **Cross-cutting (Tech Lead).** Architecture reviews, performance review, and the code-review backbone for the backend.
 
-### Valeriy — Backend Developer (Realtime & Notifications)
+## Valeriy — Backend Developer (Realtime & Notifications)
 
 - **SignalR hubs.** Designed and implemented the `ChatHub` and the connection lifecycle around it — auth handshake, group join on conversation open, and graceful disconnection.
 - **Chat message flow.** End-to-end persistence-and-broadcast pipeline: store the message, target the right group, deliver to participants, and ack back to the sender. Includes read/delivery receipts and soft-delete semantics for messages and conversations.
@@ -640,6 +480,7 @@ VITE_API_BASE_URL=/api
 From the repository root:
 
 ```bash
+make
 make up
 ```
 
@@ -657,7 +498,7 @@ make up          # starts containers
 make down        # stop containers
 make build       # rebuild services
 make clean       # stop and remove orphan containers
-make fclean      # remove containers, volumes, certs, and uploads
+make fclean      # remove containers, volumes, certs, uploads and images
 make re          # clean and start again, keeping the DB volume
 ```
 
@@ -683,14 +524,13 @@ npm run preview   # preview the production build
 
 ## Database operations
 
-EF Core migrations live in `backend/Transcendence.Infrastructure/Migrations` and are applied automatically on API startup.
+EF Core migrations live in `backend/Transcendence.Infrastructure/Migrations`.
 
 Helper commands:
 
 ```bash
 make backup-db
-make restore-db
-make db-up
+make restore-up
 ```
 
 Backups land in `backups/`. **Never commit real database dumps or uploaded media.**
@@ -826,4 +666,3 @@ In line with 42's transparency expectations, this section describes how AI tools
 ## Honest caveats
 
 - Some prose in `docs/` and the README was first drafted by AI and lightly edited; we believe the content accurately reflects what we built, but the phrasing is not always our own.
-- Diagram code (Mermaid ERDs in particular) was AI-generated from our schema and verified against the EF Core model.
