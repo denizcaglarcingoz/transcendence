@@ -1,5 +1,7 @@
 # Transcendence
 
+> This project has been created as part of the **42 curriculum** by [dpadenko], [mmasarov], [bvalerii] and [dcingoz].
+
 > A modern, full-stack social platform built as the **ft_transcendence** capstone project at **42 Vienna**.
 
 Transcendence is a private social application that brings together authentication, profiles, posts, comments, likes, friend management, file uploads, notifications, and real-time chat under a single, coherent product. The repository is split into a strongly-typed React frontend and a layered .NET backend, glued together by an OpenAPI-driven contract.
@@ -26,6 +28,8 @@ Transcendence is a private social application that brings together authenticatio
 16. [Security considerations](#security-considerations)
 17. [Troubleshooting](#troubleshooting)
 18. [Credits and license](#credits-and-license)
+19. [Resources](#resources)
+20. [Use of AI](#use-of-ai)
 
 ---
 
@@ -364,6 +368,7 @@ erDiagram
 > A more detailed ER diagram lives at `docs/db_schema/schema.png` _(generate later with dbdiagram.io / drawSQL and commit the export)_.
 
 ---
+
 
 ## Individual contributions
 
@@ -769,3 +774,56 @@ Third-party libraries used in this project remain under their respective license
 - **Deniz Cingoz** ([@denniscingoz](https://github.com/denniscingoz))
 - **Valeriy Bezhevets** ([@Vbezhevets](https://github.com/Vbezhevets))
 - **Michaela Masarova** ([@michaela811](https://github.com/michaela811))
+
+### Resources
+
+## Documentation
+
+- [PostgreSQL — Official Documentation](https://www.postgresql.org/docs/)
+- [EF Core — Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/)
+- [ASP.NET Core — Microsoft Learn](https://learn.microsoft.com/en-us/aspnet/core/)
+- [SignalR — Real-time web functionality](https://learn.microsoft.com/en-us/aspnet/core/signalr/)
+- [Docker Compose Reference](https://docs.docker.com/compose/)
+- [Nginx Documentation](https://nginx.org/en/docs/)
+- [Sign in with Google — Google Identity](https://developers.google.com/identity/sign-in/web)
+- [Mermaid — Diagrams as code](https://mermaid.js.org/intro/)
+
+## Articles & Tutorials
+
+- [TBC]
+- [TBC]
+- [TBC]
+
+## Specifications
+
+- [42 — `ft_transcendence` subject](https://cdn.intra.42.fr/pdf/pdf/203589/en.subject.pdf)
+
+---
+
+### Use of AI
+
+In line with 42's transparency expectations, this section describes how AI tools were used during the project — for which tasks and which parts of the codebase.
+
+## Tools used
+
+- **Claude (Anthropic)** — primary assistant for documentation and design discussions.
+- _[add others if applicable: ChatGPT, GitHub Copilot, etc.]_
+
+## Where AI helped
+
+- **Documentation.** README sections, schema descriptions, the database ERD, and architectural write-ups were drafted with AI assistance and then reviewed and edited by team members before being committed.
+- **Concept explanation.** AI was used to explain unfamiliar concepts before applying them in code — e.g., SignalR connection lifecycle, OAuth 2.0 authorization-code flow, EF Core change tracking, trunk-based branching conventions.
+- **Debugging support.** When a bug resisted manual investigation, AI was used as a sounding board to enumerate possible causes and suggest places to instrument.
+- **Boilerplate and scaffolding.** Repetitive code (DTO mappings, basic CRUD endpoints, test fixtures) was occasionally drafted with AI assistance and then adapted to fit our conventions.
+- **SQL and query review.** Complex SuiteQL/SQL queries were reviewed with AI as a second pair of eyes for edge cases.
+
+## Where AI was *not* used
+
+- **Architectural decisions.** The API contract, database schema (including the friendship pair-normalization, message idempotency design, and notification denormalization), and module boundaries were designed by the team.
+- **Unreviewed generation.** No AI-generated code was merged without being read, understood, and adapted by the developer responsible.
+- **Bypassing learning.** AI was treated as a research and writing assistant, not a substitute for understanding the underlying concepts — every team member can explain and defend the code in the parts they own.
+
+## Honest caveats
+
+- Some prose in `docs/` and the README was first drafted by AI and lightly edited; we believe the content accurately reflects what we built, but the phrasing is not always our own.
+- Diagram code (Mermaid ERDs in particular) was AI-generated from our schema and verified against the EF Core model.
