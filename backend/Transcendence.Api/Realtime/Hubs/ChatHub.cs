@@ -14,9 +14,9 @@ using System.Text.Json;
 using System.IO.IsolatedStorage;
 using System.Collections.Specialized;
 using Transcendence.Domain.Users;
-
+using Microsoft.AspNetCore.Authorization;
 namespace Transcendence.Api.Realtime.Hubs;
-
+[Authorize]
 public sealed class ChatHub : Hub<IRealtimeClient> 
 {
     private readonly IChatService _chatService;
@@ -202,28 +202,20 @@ public sealed class ChatHub : Hub<IRealtimeClient>
             });
     }
 }
-   
-     private Guid GetUserId()
+ 
+ 
+    private Guid GetUserId()
     {
         var claimValue =
             Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
             ?? Context.User?.FindFirst("sub")?.Value;
 
-        if (Guid.TryParse(claimValue, out var claimUserId))
-            return claimUserId;
+        if (Guid.TryParse(claimValue, out var userId))
+            return userId;
 
-        var httpContext = Context.GetHttpContext();
-
-        var devQuery = httpContext?.Request.Query["devUserId"].FirstOrDefault();
-        if (Guid.TryParse(devQuery, out var queryUserId))
-            return queryUserId;
-
-        var devHeader = httpContext?.Request.Headers["X-Dev-UserId"].FirstOrDefault();
-        if (Guid.TryParse(devHeader, out var headerUserId))
-            return headerUserId;
-
-        throw new UnauthorizedAccessException("Invalid token.");
+        throw new HubException("Unauthorized.");
     }
+ 
     public async Task MarkAllIncomingAsDelivered()
     {
         var userId = GetUserId();
@@ -272,132 +264,4 @@ public sealed class ChatHub : Hub<IRealtimeClient>
         return null;
     }
 }
-    /*
-    connection.invoke → request to server
-
-    Clients.* → сервер пушит событие
-
-    connection.on → client listens to events
-
-
-    CLIENT (reader)
-   |
-   | invoke MarkAsRead
-   v
-
-    HUB
-   |
-   | → ChatService.MarkConversationAsRead
-   |       (database)
-   |
-   | → Clients.OthersInGroup
-           (notify senders)
-
-        UserA sends message
-                |
-                v
-
-        Server saves message
-                |
-                v
-
-        UserB opens chat
-                |
-                v
-
-        ClientB -> MarkAsRead
-                |
-                v
-
-        Server updates DB
-                |
-                v
-
-        Server -> MessageRead -> UserA       
-    */
-
-/*
-
-Browser
-   │
-   ▼
-SignalR connection
-   │
-   ▼
-ChatHub
-   │
-   ├── PresenceService
-   │       user → connections
-   │
-   ├── ChatService
-   │       conversations (DB)
-   │
-   └── SignalR Groups
-           user groups
-           conversation groups
-
-ChatHub — это transport layer.
-	•	принимает WebSocket-соединение
-	•	получает вызовы от клиента (SendMessage, JoinConversation)
-	•	добавляет connection в SignalR group
-	•	рассылает сообщения в group
-
-Client
-  │ SendMessageCommandDto
-  ▼
-ChatHub
-  │
-  │ calls
-  ▼
-ChatService
-  │
-  │ creates
-  ▼
-Message (Domain)
-  │
-  │ save
-  ▼
-Database
-  │
-  │ mapping
-  ▼
-ChatMessageDto
-  │
-  │ returns
-  ▼
-ChatHub
-  │
-  │ sends
-  ▼
-Clients.Group
-
-User A
- ├─ connectionId 1 (browser)
- ├─ connectionId 2 (mobile)
-
-User B
- ├─ connectionId 3
-
-Groups:
-"user:A" → [conn1, conn2]
-"user:B" → [conn3]
-
-"conv:123" → [conn1, conn3]
-
-Clients.Group(GroupNames.Conversation(conversationId)) delivers messages
-to all connections that joined the given conversation group.
-A single user may receive the message multiple times if they have
-multiple active connections (browser, mobile, multiple tabs).
-
-Groups.AddToGroupAsync(connectionId, GroupNames.User(userId)) adds the
-current connection to a user-specific group. This group represents
-all active connections of a single user and is independent from
-conversation membership.
-
-A user can belong to the user group without belonging to any
-conversation group until JoinConversation is called.
-
-
-User-group = “кому”
-Conversation-group = “где”
-*/
+    
