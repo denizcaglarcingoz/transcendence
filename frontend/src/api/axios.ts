@@ -1,6 +1,9 @@
 import axios from 'axios'
 import { getStoredToken } from '../auth/AuthContext'
 
+// Shared Axios client used by all API files.
+// Centralizes backend base URL and request configuration.
+
 const api = axios.create({
   // Uses VITE_API_BASE_URL from .env, or same origin if empty
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
