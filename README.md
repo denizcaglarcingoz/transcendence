@@ -77,7 +77,9 @@ Given the small team size and fixed academic deadline, we kept coordination deli
 - **Source control:** Git + GitHub
 - **Tracking:** _GitHub Projects Issues_
 - **Communication:** _Whatsapp group_
-- **Design:** _Figma_
+- **Design:** 
+  - [Main Figma file](https://www.figma.com/proto/CHmG51ysucilKi9Y2d2JpK/SocialLink-Social-media-Application-UI--Community-?node-id=224-527&t=QZm5JHExFhO5kVTK-0&scaling=contain&content-scaling=fixed&page-id=0%3A1)
+  - [Wireframes / User flows](https://www.figma.com/design/CHmG51ysucilKi9Y2d2JpK/SocialLink-Social-media-Application-UI--Community-?node-id=0-1&p=f)
 - **Documentation:** in-repo Markdown under `docs/`
 
 ---
@@ -617,7 +619,7 @@ Third-party libraries used in this project remain under their respective license
 
 ### Resources
 
-## Documentation
+### Documentation, Articles & Tutorials
 
 - [PostgreSQL — Official Documentation](https://www.postgresql.org/docs/)
 - [EF Core — Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/)
@@ -627,12 +629,15 @@ Third-party libraries used in this project remain under their respective license
 - [Nginx Documentation](https://nginx.org/en/docs/)
 - [Sign in with Google — Google Identity](https://developers.google.com/identity/sign-in/web)
 - [Mermaid — Diagrams as code](https://mermaid.js.org/intro/)
-
-## Articles & Tutorials
-
-- [TBC]
-- [TBC]
-- [TBC]
+- [Thinking in React](https://react.dev/learn/thinking-in-react)
+- [A Complete Guide to useEffect](https://overreacted.io/a-complete-guide-to-useeffect/)
+- [Is TypeScript Just A Linter?](https://www.totaltypescript.com/is-typescript-just-a-linter)
+- [ASP.NET Core SignalR](https://youtube.com/playlist?list=PLOeFnOV9YBa7nzzuXnThdfsyY06AuCP5V&si=ZBeMFPciG3XPPPVO)
+- [.NET tutorials](https://www.youtube.com/@SachkovDev)
+- [Clean Architecture](https://habr.com/ru/companies/otus/articles/732178/)
+- [API](https://habr.com/ru/articles/964818/)
+- [Architecture chronicles](https://herbertograca.com/2017/07/03/the-software-architecture-chronicles/)
+- [Websockets](https://habr.com/ru/articles/646401/)
 
 ## Specifications
 
