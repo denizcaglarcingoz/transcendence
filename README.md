@@ -418,28 +418,9 @@ VITE_API_BASE_URL=/api
 │       ├── backup-db.sh                # pg_dump wrapper
 │       └── restore-db.sh               # pg_restore wrapper
 ├── docs/
-│   ├── api/                            # Endpoint contracts, payload shapes
-│   │   ├── auth/
-│   │   ├── chats/
-│   │   ├── common/
-│   │   ├── feed/
-│   │   ├── notifications/
-│   │   ├── profile/
-│   │   ├── search/
-│   |   └── openapi.yaml
-│   ├── back end/                       # Backend design notes
-│   │   ├── chat/
-│   |   └──  OpenApi
-│   ├── db_schema/                      # ER diagrams, schema drafts
-│   │   ├── DB_schema.jpg
-│   |   └── schema.dbml
-│   ├── front/                          # Frontend design notes
-│   ├── minor/                          # Notes per minor module
-│   ├── DB entities -> api.md                        
-│   ├── DB Entities.md
-│   ├── en.subject_Transcendence.pdf    # 42 subject reference
-│   ├── SOCIAL MEDIA Features.jpg
-│   └── User scenarios.md
+│   └── db_schema/                      # ER diagrams, schema drafts
+│       ├── DB_schema.jpg
+│       └── schema.dbml
 ├── frontend/
 │   ├── public/                         # Static assets
 │   ├── src/
@@ -470,11 +451,9 @@ VITE_API_BASE_URL=/api
 ├── .dockerignore
 ├── .env.example
 ├── .gitignore
-├── API-First PLAN Backend–Frontend Collaboration (Draft).md
 ├── docker-compose.yml
 ├── Makefile
-├── README.md
-└── The-Social_Flow-Tecnical-Tools.pdf  # Technical tooling reference
+└── README.md
 ```
 
 ---
