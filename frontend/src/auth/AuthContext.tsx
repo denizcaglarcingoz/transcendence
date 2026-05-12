@@ -3,6 +3,9 @@ import type { SignInRequestDto, SignUpRequestDto, GoogleSignInRequestDto } from 
 import { signInApi, signUpApi, googleSignInApi } from '../api/auth.api'
 import { useQueryClient } from '@tanstack/react-query'
 
+// Stores and exposes authentication state for the whole app.
+// Components can use useAuth() to access the current user and login/logout actions.
+
 // TYPE DEFINITIONS 
 /** User data stored in authentication context */
 type AuthUser = {

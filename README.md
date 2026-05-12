@@ -50,7 +50,7 @@ Transcendence is a private social application that brings together authenticatio
 |---|---|---|---|
 | **Deniz** | **Product Owner (PO) & Project Manager (PM)** | [@denniscingoz](https://github.com/denniscingoz) | Vision, scope, acceptance criteria, design, planning, coordination, delivery |
 | **Daria** | **Tech Lead** | [@grignetta](https://github.com/grignetta) | Architecture, code review, technical direction, database |
-| **Valerii** | **Backend Developer** | [@Vbezhevets](https://github.com/Vbezhevets) | Realtime features with SignalR |
+| **Valeriy** | **Backend Developer** | [@Vbezhevets](https://github.com/Vbezhevets) | Realtime features with SignalR |
 | **Michaelaela** | **Frontend Developer** | [@Michaelaela811](https://github.com/Michaelaela811) | Frontend application |
 
 > _Roles were assigned at kickoff and remained stable through the project. All members contributed to code, and everyone tested the system and fixed bugs across the codebase; the role headings indicate primary responsibility, not exclusive ownership._
@@ -77,7 +77,9 @@ Given the small team size and fixed academic deadline, we kept coordination deli
 - **Source control:** Git + GitHub
 - **Tracking:** _GitHub Projects Issues_
 - **Communication:** _Whatsapp group_
-- **Design:** _Figma_
+- **Design:** 
+  - [Main Figma file](https://www.figma.com/proto/CHmG51ysucilKi9Y2d2JpK/SocialLink-Social-media-Application-UI--Community-?node-id=224-527&t=QZm5JHExFhO5kVTK-0&scaling=contain&content-scaling=fixed&page-id=0%3A1)
+  - [Wireframes / User flows](https://www.figma.com/design/CHmG51ysucilKi9Y2d2JpK/SocialLink-Social-media-Application-UI--Community-?node-id=0-1&p=f)
 - **Documentation:** in-repo Markdown under `docs/`
 
 ---
@@ -157,7 +159,7 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | **Design system** | Reusable UI components (Modal, BottomNav, Field, LanguageDropdown, UploadProgressOverlay, ProtectedPostThumb, …) | Michaela | — | ✅ |
 | | Shared CSS utilities (`.btn-*`, `.input`, `.card`, `.panel`, `.divider`, `.message-*`) | Michaela | — | ✅ |
 | **Infra** | Docker Compose (db + api + nginx) | — | Daria | ✅ |
-| | Nginx reverse proxy + WebSocket upgrade | — | Daria, Valerii | ✅ |
+| | Nginx reverse proxy + WebSocket upgrade | — | Daria, Valeriy | ✅ |
 | | Local TLS certs (self-signed) | — | Daria | ✅ |
 | | DB backup / restore scripts | — | Daria | ✅ |
 | | EF Core migrations applied on startup | — | Daria | ✅ |
@@ -171,8 +173,8 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | Choice | Why |
 |---|---|
 | **ASP.NET Core Web API** | Mature, cross-platform, opinionated. Strong typing end-to-end and excellent OpenAPI tooling support. |
-| **C# / .NET 8** | Performance, a rich BCL, and first-class async — ideal for WebSocket-heavy workloads. |
-| **Entity Framework Core (Npgsql)** | Code-first migrations, LINQ queries, and a strict mapping layer between domain models and persistence — directly satisfies the **ORM minor module**. |
+| **C# / .NET 8** | Performance, a rich Base Class Library - ideal for WebSocket-heavy workloads. |
+| **Entity Framework Core (Npgsql)** | Code-first migrations, and a strict mapping layer between domain models and persistence — directly satisfies the **ORM minor module**. |
 | **SignalR** | Battle-tested abstraction over WebSockets with built-in transport fallback, group/user targeting, and reconnection — drastically reduces the surface area of the **real-time major module**. |
 | **JWT bearer auth** | Stateless, plays well with SPAs, and integrates cleanly with both local and Google OAuth identity flows. |
 | **Google.Apis.Auth** | Server-side verification of Google ID tokens before issuing our own JWT. |
@@ -191,7 +193,7 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | **`@microsoft/signalr` client** | Official client for the chat hub, with auto-reconnect wired through `RealtimeProvider`. |
 | **`@react-oauth/google`** | Drop-in Google sign-in button that returns an ID token for backend verification. |
 | **i18next** | Industry-standard i18n with runtime language switching across three languages — directly satisfies the **multi-language minor module**. |
-| **MSW** | Lets the frontend run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback. |
+| **Mock Service Worker** | Lets the frontend run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback. |
 | **Tailwind CSS** | Utility-first, design-system-friendly. Tailwind tokens back our **custom design system minor module**. |
 
 ### Infrastructure
@@ -224,17 +226,17 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
                        └─────┬─────────────────────┬─────────┘
                              │                     │
                              ▼                     ▼
-              ┌──────────────────────────┐    ┌──────────────────────────────┐
-              │ Transcendence.Application│    │ Transcendence.Infrastructure │
-              │  Service contracts       │    │  EF Core · repositories      │
-              │  Use cases · DTOs        │◄─--│  File storage · JWT gen      │
-              └────────────┬─────────────┘    └──────────────┬───────────────┘
-                           │                                 │
-                           ▼                                 ▼
-              ┌─────────────────────────┐     ┌──────────────────────────┐
-              │  Transcendence.Domain   │     │      PostgreSQL 16       │
-              │  Entities · core rules  │     │     + /app/uploads       │
-              └─────────────────────────┘     └──────────────────────────┘
+              ┌────────────────────────────┐   ┌──────────────────────────────┐
+              │ Transcendence.Application. │   │ Transcendence.Infrastructure │
+              │  Service contracts         │   │  EF Core · repositories      │
+              │  Use cases · DTOs          │ ◄─│  File storage · JWT gen      │
+              └────────────┬───────────────┘   └──────────────┬───────────────┘
+                           │                                  │
+                           ▼                                  ▼
+              ┌─────────────────────────┐        ┌──────────────────────────┐
+              │  Transcendence.Domain   │        │   PostgreSQL 16          │
+              │  Entities · core rules  │        │   + /app/uploads         │
+              └─────────────────────────┘        └──────────────────────────┘
 ```
 
 **Why this layering?** It keeps the **Domain** pure, no framework, no database, no HTTP, so the business rules can be reasoned about on their own. **Application** sits on top, defining the use cases and the contracts that the outer layers must satisfy. **Infrastructure** implements those contracts against EF Core, the filesystem, and external services like Google Identity. **Api** is the thin edge that translates HTTP requests and SignalR messages into Application calls.
@@ -292,9 +294,9 @@ Notifications store a snapshot of the sender’s username and avatar at the time
 
 ---
 
-## Individual contributions
+### Individual contributions
 
-### Michaela — Frontend Developer
+## Michaela — Frontend Developer
 
 - **Application shell & routing.** Set up the Vite + React + TypeScript project, the routing tree, the `RequireAuth` protected-route wrapper, and the `RealtimeProvider` that mounts the SignalR client at the right point in the lifecycle.
 - **Custom design system.** Built the reusable UI layer on Tailwind tokens — layout components (`Layout`, `Header`, `BottomNav`), generic widgets (`Modal`, `Field`, `LanguageDropdown`, `UploadProgressOverlay`, `ProtectedPostThumb`), and domain modals (`PostDetailModal`, `LikesModal`, `NotificationsModal`, `SearchModal`, `SettingsModal`) — together with a shared CSS utility layer in `index.css` (`.btn-*`, `.input`, `.card`, `.panel`, `.divider`, `.message-*`). Satisfies the **custom design system** Minor module.
@@ -305,7 +307,7 @@ Notifications store a snapshot of the sender’s username and avatar at the time
 - **Mock-mode harness.** Set up MSW so the frontend could run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback.
 - **Tooling.** ESLint config, Tailwind setup, TypeScript strict-mode, and the `frontend/.env` contract.
 
-### Deniz — Product Owner & Backend Developer
+## Deniz — Product Owner & Backend Developer
 
 - **Application layer.** Implemented the services that drive the user-facing features: `AuthService`, `ProfileService`, `PostsService`, `PostsFeedService`, `PostsProfileService`, `FriendsService`, and `FilesService`.
 - **Domain rules and invariants.** Encoded the rules that keep the data consistent — no self-friendships, no duplicate friend requests, friends-only file access, idempotent like/unlike, and the soft-delete semantics for posts and comments.
@@ -317,7 +319,7 @@ Notifications store a snapshot of the sender’s username and avatar at the time
 - **API integration layer.** Built the typed API clients under `src/api/`, the Axios instance with token attachment and 401 handling, and the TanStack Query hooks that consume them across the app.
 - **Authentication flows.** Email/password sign-in, Google OAuth 2.0 sign-in, sign-out, JWT handling, and session restoration on reload.
 
-### Daria — Tech Lead & Backend Foundation
+## Daria — Tech Lead & Backend Foundation
 
 - **Clean Architecture.**  Organized the backend into Api, Application, Domain, and Infrastructure projects to separate business logic, persistence, and HTTP concerns.
 - **Database & ORM (EF Core).** Designed the PostgreSQL database schema, created the TranscendenceDbContext, configured entity relationships, and wrote the EF Core migrations for users, posts, friendships, messages, and notifications.
@@ -326,7 +328,7 @@ Notifications store a snapshot of the sender’s username and avatar at the time
 - **Nginx & HTTPS setup.** Configured Nginx to serve the frontend, forward API requests to ASP.NET, enable HTTPS with self-signed certificates, and support SignalR real-time connections.
 - **Tech Lead responsibilities.** Reviewed backend pull requests, helped define architecture decisions, and assisted the team with debugging and backend integration issues.
 
-### Valerii — Backend Developer (Realtime & Notifications)
+## Valerii — Backend Developer (Realtime & Notifications)
 
 - **Realtime ownership.** Was responsible for realtime features across chat, presence, and notifications.
 - **SignalR foundation.** Designed and implemented the SignalR-based realtime functionality.
@@ -500,7 +502,7 @@ make up          # starts containers
 make down        # stop containers
 make build       # rebuild services
 make clean       # stop and remove orphan containers
-make fclean      # remove containers, volumes, certs, and uploads
+make fclean      # remove containers, volumes, certs, uploads and images
 make re          # clean and start again, keeping the DB volume
 ```
 
@@ -532,7 +534,7 @@ Helper commands:
 
 ```bash
 make backup-db
-make db-up
+make restore-up
 ```
 
 Backups land in `backups/`. **Never commit real database dumps or uploaded media.**
@@ -619,22 +621,28 @@ Third-party libraries used in this project remain under their respective license
 
 ## Resources
 
-### Documentation
+### Documentation, Articles & Tutorials
 
 - [PostgreSQL — Official Documentation](https://www.postgresql.org/docs/)
 - [EF Core — Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/)
-- [ASP.NET Core — Microsoft Learn](https://learn.microsoft.com/en-us/aspnet/core/)
+- [ASP.NET Core — Microsoft Learn](https://learn.microsoft.com/en-us/aspnet/core/?view=aspnetcore-10.0)
 - [SignalR — Real-time web functionality](https://learn.microsoft.com/en-us/aspnet/core/signalr/)
 - [Docker Compose Reference](https://docs.docker.com/compose/)
 - [Nginx Documentation](https://nginx.org/en/docs/)
 - [Sign in with Google — Google Identity](https://developers.google.com/identity/sign-in/web)
 - [Mermaid — Diagrams as code](https://mermaid.js.org/intro/)
-
-### Articles & Tutorials
-
-- [TBC]
-- [TBC]
-- [TBC]
+- [Thinking in React](https://react.dev/learn/thinking-in-react)
+- [A Complete Guide to useEffect](https://overreacted.io/a-complete-guide-to-useeffect/)
+- [Is TypeScript Just A Linter?](https://www.totaltypescript.com/is-typescript-just-a-linter)
+- [ASP.NET Core SignalR](https://youtube.com/playlist?list=PLOeFnOV9YBa7nzzuXnThdfsyY06AuCP5V&si=ZBeMFPciG3XPPPVO)
+- [.NET tutorials](https://www.youtube.com/@SachkovDev)
+- [Clean Architecture](https://habr.com/ru/companies/otus/articles/732178/)
+- [API](https://habr.com/ru/articles/964818/)
+- [Architecture chronicles](https://herbertograca.com/2017/07/03/the-software-architecture-chronicles/)
+- [Websockets](https://habr.com/ru/articles/646401/)
+- [Swagger](https://learn.microsoft.com/en-us/aspnet/core/tutorials/web-api-help-pages-using-swagger?view=aspnetcore-8.0)
+- [Swashbuckle](https://learn.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-8.0&tabs=visual-studio)
+- [Bearer](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-10.0)
 
 ### Specifications
 
