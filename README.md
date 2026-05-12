@@ -65,7 +65,7 @@ Given the small team size and fixed academic deadline, we kept coordination deli
 
 - **Discovery phase (week 1).** Requirements walk-through, scope agreement, module selection, and a target point total. Wireframes and a domain model were produced before any code was written.
 - **API-first contract.** Backend and frontend agreed on endpoint shapes, payloads, and auth flows **before** parallel implementation began. This single decision unblocked nearly all parallel work.
-- **Documentation discipline.** `docs/` is split by audience - `api/`, `back end/`, `front/`, `db_schema/`, and `minor/`. Cross-module dependencies were tracked in `Dependency map.pages` so we always knew the impact radius of a change.
+- **Documentation discipline.** `docs/` is split by audience - `api/`, `back end/`, `front/`, `db_schema/`, and `minor/`.
 - **Task tracking.** Work items were captured as GitHub issues against the repo and assigned at kickoff, then reallocated as scope shifted. We did not run formal sprints, coordination was continuous rather than time-boxed.
 - **Branching strategy.** Trunk-based development with short-lived feature branches, pull requests into `main`, and review before merge to keep history readable.
 - **Communication.** Async-first via a shared WhatsApp group for day-to-day coordination: blockers, asks, progress updates, supplemented by occasional calls for design discussions and harder problem solving. This kept overhead low and let each member work in long uninterrupted blocks.
@@ -137,23 +137,23 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | | Likes + likes list | Michaela | Deniz | ✅ |
 | **Friends** | Send / accept / decline requests | Michaela | Deniz | ✅ |
 | | Friends list (cursor-paginated) + remove | Michaela | Deniz | ✅ |
-| **Presence** | Online users tracking | — | Valeriy | ✅ |
-| | Online status in friends list & chat | Michaela | Valeriy | ✅ |
-| | Presence broadcast on connect/disconnect | — | Valeriy | ✅ |
+| **Presence** | Online users tracking | — | Valerii | ✅ |
+| | Online status in friends list & chat | Michaela | Valerii | ✅ |
+| | Presence broadcast on connect/disconnect | — | Valerii | ✅ |
 | **Files** | Upload with type/size/magic-byte validation | Deniz | Deniz | ✅ |
 | | Friends-only access control | — | Deniz | ✅ |
 | | Image/video preview + upload progress | Deniz | — | ✅ |
 | | Delete uploaded files | Deniz | Deniz | ✅ |
-| **Notifications** | Persisted notifications (DB) | Michaela | Valeriy | ✅ |
-| | Realtime notification events (SignalR) | Michaela | Valeriy | ✅ |
-| | Unread counter | Michaela | Valeriy | ✅ |
-| | Mark as read (single, all, by conversation) | Michaela | Valeriy | ✅ |
-| **Chat** | Real-time messaging via SignalR | Michaela | Valeriy | ✅ |
-| | Conversation list + message history (paginated) | Michaela | Valeriy | ✅ |
-| | Read / delivery receipts | Michaela | Valeriy | ✅ |
-| | Soft-delete messages | Michaela | Valeriy | ✅ |
-| | Delete conversations | Michaela | Valeriy | ✅ |
-| | Reconnection handling | Michaela | Valeriy | ✅ |
+| **Notifications** | Persisted notifications (DB) | Michaela | Valerii | ✅ |
+| | Realtime notification events (SignalR) | Michaela | Valerii | ✅ |
+| | Unread counter | Michaela | Valerii | ✅ |
+| | Mark as read (single, all, by conversation) | Michaela | Valerii | ✅ |
+| **Chat** | Real-time messaging via SignalR | Michaela | Valerii | ✅ |
+| | Conversation list + message history (paginated) | Michaela | Valerii | ✅ |
+| | Read / delivery receipts | Michaela | Valerii | ✅ |
+| | Soft-delete messages | Michaela | Valerii | ✅ |
+| | Delete conversations | Michaela | Valerii | ✅ |
+| | Reconnection handling | Michaela | Valerii | ✅ |
 | **i18n** | Translation files (EN, ES, FR) | Michaela | — | ✅ |
 | | Runtime language switcher | Michaela | — | ✅ |
 | **Design system** | Reusable UI components (Modal, BottomNav, Field, LanguageDropdown, UploadProgressOverlay, ProtectedPostThumb, …) | Michaela | — | ✅ |
@@ -193,7 +193,7 @@ We selected **4 Major** and **6 Minor** modules for a total of **8 module-credit
 | **`@microsoft/signalr` client** | Official client for the chat hub, with auto-reconnect wired through `RealtimeProvider`. |
 | **`@react-oauth/google`** | Drop-in Google sign-in button that returns an ID token for backend verification. |
 | **i18next** | Industry-standard i18n with runtime language switching across three languages — directly satisfies the **multi-language minor module**. |
-| **MSW** | Lets the frontend run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback. |
+| **Mock Service Worker** | Lets the frontend run end-to-end without the backend, which unblocked parallel work and gave us a reliable demo fallback. |
 | **Tailwind CSS** | Utility-first, design-system-friendly. Tailwind tokens back our **custom design system minor module**. |
 
 ### Infrastructure
@@ -249,31 +249,29 @@ In practice this means new features tend to slot in along predictable seams: a n
 
 ## Database schema
 
-![alt text](image.png)
-
-> A more detailed ER diagram lives at `docs/db_schema/schema.png` _(generate later with dbdiagram.io / drawSQL and commit the export)_.
+![Database schema ERD](docs/db_schema/DB_schema.jpg)
 
 ---
 
-# Architecture
+### Schema Architecture
 
 Project Transcendence is a social platform whose database is organized around **five domains**: identity, social feed, friendships, chat, and notifications. All tables live in PostgreSQL under the `app` schema and are managed via EF Core migrations.
 
-## Identity
+#### Identity
 
 Identity is the foundation. Every `users` row supports either password or Google SSO authentication, enforced by a check constraint requiring at least one of `PasswordHash` or `GoogleId` to be set. Each user links optionally to an avatar in the `files` table.
 
-`files` itself is a generic blob registry — every uploaded asset gets a row, owned by a user, with cascade deletion when that user is removed.
+`files` is a central table that stores all uploaded files (images, avatars, etc.) — every uploaded asset gets a row, owned by a user, with cascade deletion when that user is removed.
 
-## Social Feed
+#### Social Feed
 
 The social feed is a classic **posts / comments / likes** triangle:
 
-- A post **must** carry an image. The FK to `files` uses `RESTRICT` so you can't orphan a post by deleting its image.
+- A post **must** carry an image. The FK to `files` uses `RESTRICT` - the database prevents deleting an image if it is still used by a post, ensuring that posts always have a valid image.
 - The `likes` table has a unique index on `(PostId, AuthorId)`, so a user can only like a given post once.
 - Cascading deletes on `PostId` clean up comments and likes when a post is removed.
 
-## Friendships
+#### Friendships
 
 Friendships use a **pair-normalization trick**. Both `Friendships` and `FriendshipRequests` enforce `User1Id < User2Id` so each pair exists exactly once in canonical order. This has two payoffs:
 
@@ -282,17 +280,17 @@ Friendships use a **pair-normalization trick**. Both `Friendships` and `Friendsh
 
 The **original direction** of a request is preserved separately via `RequesterId` and `TargetUserId`. Self-friendships are blocked by `CHECK (RequesterId <> TargetUserId)`.
 
-## Chat
+#### Chat
 
 Chat supports both **direct (1-to-1)** and **group** conversations via a `Type` discriminator on `Conversations`. Participation is a join table with per-user `LastReadAt` for cheap unread-count queries.
 
-Messages carry a client-generated `ClientMessageId` so **retries are idempotent**: the unique index on `(SenderId, ClientMessageId)` means the second copy of a retried send collides on insert and the original is returned, instead of producing duplicates.
+Messages carry a client-generated `ClientMessageId` so **retries are idempotent**: the unique index on `(SenderId)` prevent duplicates. If the same message is sent multiple times (for example due to network retries), the database recognizes it and stores only one copy..
 
 Deleted messages are **soft-deleted** (`IsDeleted` + `DeletedAt`) to keep threading and read pointers consistent.
 
-## Notifications
+#### Notifications
 
-Notifications **denormalize actor metadata** (`ActorUsername`, `ActorAvatarUrl`) directly onto each row, so the feed renders without joins — even if the actor later changes their username or avatar. A typed `Type` column distinguishes the six notification kinds: new message, friend request, accepted, declined, post liked, post commented.
+Notifications store a snapshot of the sender’s username and avatar at the time they are created. This allows the frontend to display notifications without additional queries, and ensures older notifications remain unchanged even if the user later updates their profile. Each notification has a Type field to distinguish different events, such as: new message, friend request, accepted, declined, post liked, and post commented.
 
 ---
 
@@ -323,20 +321,23 @@ Notifications **denormalize actor metadata** (`ActorUsername`, `ActorAvatarUrl`)
 
 ## Daria — Tech Lead & Backend Foundation
 
-- **Architecture.** Established the four-project layout (`Transcendence.Api` / `Application` / `Domain` / `Infrastructure`) and the dependency-direction rules between them.
-- **Database & ORM.** Designed the schema, wrote the initial `TranscendenceDbContext`, the per-entity EF Core configurations, and every migration in `Transcendence.Infrastructure/Migrations`.
+- **Clean Architecture.**  Organized the backend into Api, Application, Domain, and Infrastructure projects to separate business logic, persistence, and HTTP concerns.
+- **Database & ORM (EF Core).** Designed the PostgreSQL database schema, created the TranscendenceDbContext, configured entity relationships, and wrote the EF Core migrations for users, posts, friendships, messages, and notifications.
 - **Repository layer.** Implemented the persistence side of every `I*Repository` interface defined in Application — `UserRepository`, `PostsRepository`, `FriendsRepository`, `MessageRepository`, `NotificationRepository`, and the rest.
-- **Infrastructure & deployment.** Built the Docker Compose stack (db + api + nginx), the Nginx reverse-proxy config including TLS termination and the WebSocket upgrade for SignalR, the self-signed cert generation script, the DB backup/restore scripts, and the Makefile that ties it all together.
-- **CI.** Backend build pipeline (`dotnet build` on Ubuntu) so every PR is verified before merge.
-- **Cross-cutting (Tech Lead).** Architecture reviews, performance review, and the code-review backbone for the backend.
+- **Dockerized deployment.** Built the Docker Compose setup for the API, PostgreSQL database, and Nginx reverse proxy, and created the root Makefile so the whole project can be started with a single command.
+- **Nginx & HTTPS setup.** Configured Nginx to serve the frontend, forward API requests to ASP.NET, enable HTTPS with self-signed certificates, and support SignalR real-time connections.
+- **Tech Lead responsibilities.** Reviewed backend pull requests, helped define architecture decisions, and assisted the team with debugging and backend integration issues.
 
-## Valeriy — Backend Developer (Realtime & Notifications)
+## Valerii — Backend Developer (Realtime & Notifications)
 
-- **SignalR hubs.** Designed and implemented the `ChatHub` and the connection lifecycle around it — auth handshake, group join on conversation open, and graceful disconnection.
-- **Chat message flow.** End-to-end persistence-and-broadcast pipeline: store the message, target the right group, deliver to participants, and ack back to the sender. Includes read/delivery receipts and soft-delete semantics for messages and conversations.
-- **Presence service.** Online-users tracking with a `PresenceService` and `OnlineUsersSnapshot`, broadcasting connect/disconnect events to friends and conversation participants.
-- **Notification pipeline.** End-to-end notifications: domain events for friend requests, friend request accept/decline, post likes, post comments, and chat messages — persisted via `NotificationRepository` and pushed in real time over SignalR (`NotificationReceived`, `NotificationsChanged`, `ConversationsChanged`).
-- **Reconnection handling.** Server-side bookkeeping that lets clients reconnect cleanly after transient drops without losing presence or unread state.
+- **Realtime ownership.** Was responsible for realtime features across chat, presence, and notifications.
+- **SignalR foundation.** Designed and implemented the SignalR-based realtime functionality.
+- **ChatHub lifecycle.** Implemented the ChatHub connection lifecycle — authentication, conversation groups, and connect/disconnect handling.
+- **Chat message flow.** Implemented the realtime chat message pipeline: persistence, broadcasting, acknowledgements, read/delivery receipts, soft-delete, and conversation deletion support.
+- **Presence tracking.** Implemented online users, friends/chat online status, and connect/disconnect broadcasts.
+- **Notification pipeline.** Implemented the realtime notification flow — persisted notifications, SignalR push events, unread counters, and mark-as-read behavior.
+- **Frontend integration.** Integrated realtime updates with the chat, friends, presence, and notification features on the frontend.
+- **Reconnection handling.** Implemented reconnection handling for presence, unread counters, and realtime state synchronization.
 
 ---
 
@@ -426,8 +427,10 @@ VITE_API_BASE_URL=/api
 │   |   └── openapi.yaml
 │   ├── back end/                       # Backend design notes
 │   │   ├── chat/
-│   │   ├── OpenApi
+│   |   └──  OpenApi
 │   ├── db_schema/                      # ER diagrams, schema drafts
+│   │   ├── DB_schema.jpg
+│   |   └── schema.dbml
 │   ├── front/                          # Frontend design notes
 │   ├── minor/                          # Notes per minor module
 │   ├── DB entities -> api.md                        
@@ -466,7 +469,6 @@ VITE_API_BASE_URL=/api
 ├── .env.example
 ├── .gitignore
 ├── API-First PLAN Backend–Frontend Collaboration (Draft).md
-├── Dependency map.pages                # Cross-module dependency map
 ├── docker-compose.yml
 ├── Makefile
 ├── README.md
@@ -614,10 +616,10 @@ Third-party libraries used in this project remain under their respective license
 
 - **Daria Padenkova** ([@grignetta](https://github.com/grignetta))
 - **Deniz Cingoz** ([@denniscingoz](https://github.com/denniscingoz))
-- **Valeriy Bezhevets** ([@Vbezhevets](https://github.com/Vbezhevets))
+- **Valerii Bezhevets** ([@Vbezhevets](https://github.com/Vbezhevets))
 - **Michaela Masarova** ([@michaela811](https://github.com/michaela811))
 
-### Resources
+## Resources
 
 ### Documentation, Articles & Tutorials
 
@@ -642,22 +644,22 @@ Third-party libraries used in this project remain under their respective license
 - [Swashbuckle](https://learn.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-8.0&tabs=visual-studio)
 - [Bearer](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-10.0)
 
-## Specifications
+### Specifications
 
 - [42 — `ft_transcendence` subject](https://cdn.intra.42.fr/pdf/pdf/203589/en.subject.pdf)
 
 ---
 
-### Use of AI
+## Use of AI
 
 In line with 42's transparency expectations, this section describes how AI tools were used during the project — for which tasks and which parts of the codebase.
 
-## Tools used
+### Tools used
 
-- **Claude (Anthropic)** — primary assistant for documentation and design discussions.
+- **Claude (Anthropic)** and **Chat GPT** — primary assistant for documentation and design discussions.
 - _[add others if applicable: ChatGPT, GitHub Copilot, etc.]_
 
-## Where AI helped
+### Where AI helped
 
 - **Documentation.** README sections, schema descriptions, the database ERD, and architectural write-ups were drafted with AI assistance and then reviewed and edited by team members before being committed.
 - **Concept explanation.** AI was used to explain unfamiliar concepts before applying them in code — e.g., SignalR connection lifecycle, OAuth 2.0 authorization-code flow, EF Core change tracking, trunk-based branching conventions.
@@ -665,12 +667,12 @@ In line with 42's transparency expectations, this section describes how AI tools
 - **Boilerplate and scaffolding.** Repetitive code (DTO mappings, basic CRUD endpoints, test fixtures) was occasionally drafted with AI assistance and then adapted to fit our conventions.
 - **SQL and query review.** Complex SuiteQL/SQL queries were reviewed with AI as a second pair of eyes for edge cases.
 
-## Where AI was *not* used
+### Where AI was *not* used
 
 - **Architectural decisions.** The API contract, database schema (including the friendship pair-normalization, message idempotency design, and notification denormalization), and module boundaries were designed by the team.
 - **Unreviewed generation.** No AI-generated code was merged without being read, understood, and adapted by the developer responsible.
 - **Bypassing learning.** AI was treated as a research and writing assistant, not a substitute for understanding the underlying concepts — every team member can explain and defend the code in the parts they own.
 
-## Honest caveats
+### Honest caveats
 
 - Some prose in `docs/` and the README was first drafted by AI and lightly edited; we believe the content accurately reflects what we built, but the phrasing is not always our own.

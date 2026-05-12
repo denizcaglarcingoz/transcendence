@@ -63,9 +63,35 @@ public sealed class FriendshipRepository : IFriendshipRepository
 		_db.Friendships.Remove(entity);
 	}
 	
-	public async Task <int> CountFriendsAsync (Guid userId, CancellationToken ct)
+	public async Task<int> CountFriendsAsync(Guid userId, CancellationToken ct)
 	{
-		return await _db.Friendships.CountAsync(x => x.User1Id == userId || x.User2Id == userId, ct);
+	    var query =
+	        // Start from the Friendships table.
+	        from friendship in _db.Friendships.AsNoTracking()
+	
+	        // Get only friendships where the current user is one side of the friendship.
+	        where friendship.User1Id == userId || friendship.User2Id == userId
+	
+	        // Friendships have two users.
+	        // If the current user is User1, then the friend is User2.
+	        // Otherwise, the friend is User1.
+	        let friendId = friendship.User1Id == userId
+	            ? friendship.User2Id
+	            : friendship.User1Id
+	
+	        // Join the friend id with the Users table.
+	        // This gives access to user data such as IsDeleted.
+	        join user in _db.Users.AsNoTracking()
+	            on friendId equals user.Id
+	
+	        // Do not count deleted users as friends.
+	        where !user.IsDeleted
+	
+	        // We only need the id for counting.
+	        select user.Id;
+	
+	    // Count only the remaining active friends.
+	    return await query.CountAsync(ct);
 	}
 
 	public async Task<IReadOnlyList<Guid>> ListFriendsAsync(Guid userId, CancellationToken ct)
