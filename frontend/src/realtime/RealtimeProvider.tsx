@@ -50,7 +50,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       if (!currentUserId) return
       if (connectionRef.current) return
 
-      const connection = createChatConnection(currentUserId)
+      const connection = createChatConnection()
       connectionRef.current = connection
 
       connection.on('OnlineUsersSnapshot', (users: string[]) => {

@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr'
 import type {   CursorPageDto, OtherProfileDto  } from '../types/api'
 import api from './axios'
-
+import { getStoredToken } from '../auth/AuthContext'
 
 export type ChatMessageDto = {
   messageId: string
@@ -160,11 +160,11 @@ export async function getMessages(
   )
 }
 
-export function createChatConnection(userId: string) {
-  const hubUrl = `${HUB_BASE_URL}/hubs/chat?devUserId=${encodeURIComponent(userId)}`
-
+export function createChatConnection() {
   return new signalR.HubConnectionBuilder()
-    .withUrl(hubUrl)
+    .withUrl(`${HUB_BASE_URL}/hubs/chat`, {
+      accessTokenFactory: () => getStoredToken() ?? '',
+    })
     .withAutomaticReconnect()
     .build()
 }
