@@ -416,22 +416,9 @@ VITE_API_BASE_URL=/api
 │       ├── backup-db.sh                # pg_dump wrapper
 │       └── restore-db.sh               # pg_restore wrapper
 ├── docs/
-│   ├── api/                            # Endpoint contracts, payload shapes
-│   │   ├── auth/
-│   │   ├── chats/
-│   │   ├── common/
-│   │   ├── feed/
-│   │   ├── notifications/
-│   │   ├── profile/
-│   │   ├── search/
-│   |   └── openapi.yaml
-│   ├── back end/                       # Backend design notes
-│   │   ├── chat/
-│   |   └──  OpenApi
-│   ├── db_schema/                      # ER diagrams, schema drafts
-│   │   ├── DB_schema.jpg
-│   |   └── schema.dbml
-│   └── front/                          # Frontend design notes
+│   └── db_schema/                      # ER diagrams, schema drafts
+│       ├── DB_schema.jpg
+│       └── schema.dbml
 ├── frontend/
 │   ├── public/                         # Static assets
 │   ├── src/

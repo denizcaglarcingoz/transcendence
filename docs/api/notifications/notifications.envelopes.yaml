@@ -1,7 +1,0 @@
-NotificationsListEnvelope:
-  allOf:
-    - $ref: ../common/ApiResponse.yaml#/ApiResponseBase
-    - type: object
-      properties:
-        data:
-          $ref: ./notifications.schemas.yaml#/NotificationsListResponseDto
